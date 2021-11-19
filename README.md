@@ -1,4 +1,4 @@
 ## Okay let's go
-<img src="GlobalRender/LeGo.png" width="200" />
+<img src="LeGo.png" width="200" />
 
 
