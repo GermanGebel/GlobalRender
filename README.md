@@ -1,4 +1,4 @@
 ## Okay let's go
-<img src="LeGo.jpg" width="200" />
+<img src="LeGo.jpg"/>
 
 
