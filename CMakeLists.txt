@@ -1,9 +1,8 @@
-﻿# CMakeList.txt : Top-level CMake project file, do global configuration
-# and include sub-projects here.
-#
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required(VERSION 3.19)
+project(RayTracing)
 
-project ("GlobalRender")
+set(CMAKE_CXX_STANDARD 17)
 
-# Include sub-projects.
-add_subdirectory ("GlobalRender")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+
+add_executable(main main.cpp Scene.cpp Scene.h structs.h Light.cpp Light.h)
