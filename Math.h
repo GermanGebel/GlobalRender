@@ -49,7 +49,7 @@ struct vec<2, T> {
   }
 
   T &operator[](const size_t i) {
-    return const_cast<T &>(static_cast<const vec<2, T> &>(*this)[i])
+    return const_cast<T &>(static_cast<const vec<2, T> &>(*this)[i]);
   }
 
   T x, y;
@@ -73,10 +73,10 @@ struct vec<3, T> {
   }
 
   T &operator[](const size_t i) {
-    return const_cast<T &>(static_cast<const vec<3, T> &>(*this)[i])
+    return const_cast<T &>(static_cast<const vec<3, T> &>(*this)[i]);
   }
 
-  float norm() { return std::sqrt(x * x + y * y + z * z); }
+  T norm() { return std::sqrt(x * x + y * y + z * z); }
 
   vec<3, T> &normalize(T l = 1) {
     *this = (*this) * (l / norm());
