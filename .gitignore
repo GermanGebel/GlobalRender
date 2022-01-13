@@ -1,6 +1,8 @@
 .idea
 cmake-build-debug
 
+CMakeLists.txt
+
 # Limicept files
 *.iof
 *.spd
@@ -9,3 +11,9 @@ cmake-build-debug
 *.nit
 
 *.png
+
+out
+.vs
+
+
+
