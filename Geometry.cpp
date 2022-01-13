@@ -44,7 +44,7 @@ vec3 Triangle::getNormal(const vec3& direction) const {
 
 bool Triangle::isInside(const vec3& point) const {
   vec3 edge0 = mesh->ownPoints_[v2] - mesh->ownPoints_[v1];
-  vec3 edge1 = mesh->ownPoints_[v3] - mesh->ownPoints_[v2];
+  vec3 edge1 = mesh->ownPoints_[v3] - mesh->ownPoints_[v1];
 
   vec3 C0 = point - mesh->ownPoints_[v1];
   vec3 C1 = point - mesh->ownPoints_[v2];
@@ -57,6 +57,14 @@ bool Triangle::isInside(const vec3& point) const {
   double S3 = C2.cross(C0).length() / 2;
 
   return fabs(S - (S1 + S2 + S3)) < 1e-6;
+}
+
+
+double Triangle::getArea() const {
+  vec3 edge0 = mesh->ownPoints_[v2] - mesh->ownPoints_[v1];
+  vec3 edge1 = mesh->ownPoints_[v3] - mesh->ownPoints_[v1];
+
+  return edge0.cross(edge1).length() / 2;
 }
 
 
@@ -111,6 +119,15 @@ vec3 Mesh::randomSurfPoint() const {
 }
 
 
+double Mesh::getSurfaceArea() const {
+  double area = 0.0;
+  for (const auto& triangle : triangles_) {
+    area += triangle.getArea();
+  }
+  return area;
+}
+
+
 Sphere::Sphere(const vec3& center, double radius)
     : center_(center)
     , radius_(radius)
@@ -155,4 +172,9 @@ vec3 Sphere::randomSurfPoint() const {
   double y = radius_ * sin(theta) * sin(phi);
 
   return vec3(x, y, z);
+}
+
+
+double Sphere::getSurfaceArea() const {
+  return 4 * M_PI * radius_ * radius_;
 }

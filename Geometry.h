@@ -11,6 +11,7 @@ struct Triangle {
   bool hitTest(const Ray& ray, double& t) const;
   vec3 getNormal(const vec3& direction) const;
   bool isInside(const vec3& point) const;
+  double getArea() const;
 
   Mesh* mesh;
   int v1, v2, v3;
@@ -21,6 +22,7 @@ public:
   virtual vec3 randomSurfPoint() const = 0;
   virtual vec3 getNormal(const vec3& intersectionPoint, const vec3& direction) const = 0;
   virtual bool hitTest(const Ray& ray, double& t) const = 0;
+  virtual double getSurfaceArea() const = 0;
 
 public:
   int materialId_;
@@ -32,6 +34,7 @@ public:
   vec3 randomSurfPoint() const override;
   vec3 getNormal(const vec3& intersectionPoint, const vec3& direction) const override;
   bool hitTest(const Ray& ray, double& t) const override;
+  double getSurfaceArea() const override;
 
 public:
   std::vector<Triangle> triangles_;
@@ -46,6 +49,7 @@ public:
   vec3 randomSurfPoint() const override;
   vec3 getNormal(const vec3& intersectionPoint, const vec3& direction) const override;
   bool hitTest(const Ray& ray, double& t) const override;
+  double getSurfaceArea() const override;
 
 public:
   vec3 center_;
