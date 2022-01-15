@@ -74,13 +74,13 @@ Color Color::operator-(float value) const {
     return result;
 }
 
-float Color::operator*(const Color& color) const {
+Color Color::operator*(const Color& color) const {
     assert(this->colors.size() == color.colors.size());
 
-    float result = 0;
+    Color result;
 
     for (int i = 0; i < colors.size(); i++) {
-      result += colors[i] * color.colors[i];
+      result.colors[i] = colors[i] * color.colors[i];
     }
 
     return result;
@@ -96,12 +96,22 @@ Color Color::operator*(float value) const {
     return result;
 }
 
+float Color::dot(const Color& color) const {
+  assert(this->colors.size() == color.colors.size());
+
+  float result = 0;
+
+  for (int i = 0; i < colors.size(); i++) {
+    result += colors[i] * color.colors[i];
+  }
+
+  return result;
+}
 
 float& Color::operator[](const size_t i) {
     assert(i < colors.size());
     return colors[i];
 }
-
 
 const float& Color::operator[](const size_t i) const {
     assert(i < colors.size());

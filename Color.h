@@ -20,8 +20,9 @@ public:
     Color operator+(float value) const;
     Color operator-(const Color& color) const;
     Color operator-(float value) const;
-    float operator*(const Color& color) const;
+    Color operator*(const Color& color) const;
     Color operator*(float value) const;
+    float dot(const Color& color) const;
 
     float &operator[](const size_t i);
     const float &operator[](const size_t i) const;
