@@ -10,6 +10,10 @@ set(${PROJECT_NAME}_SOURCE_FILES
         Camera.cpp
         Geometry.h
         Geometry.cpp
+        Material.h
+        Material.cpp
+        SurfaceOpticProperties.h
+        SurfaceOpticProperties.cpp
 #        Scene.h Удалено из-за нарушения ODR, необходимо восстанавливать по мере разработки, за пояснениями -> К Юле
 #        Scene.cpp Удалено из-за нарушения ODR, необходимо восстанавливать по мере разработки, за пояснениями -> К Юле
 #        Light.h Удалено из-за нарушения ODR, необходимо восстанавливать по мере разработки, за пояснениями -> К Юле
