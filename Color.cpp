@@ -1,126 +1,159 @@
-/******************************************************************************
+#include "Color.h"
 
-Welcome to GDB Online.
-GDB online is an online compiler and debugger tool for C, C++, Python, PHP, Ruby,
-C#, VB, Perl, Swift, Prolog, Javascript, Pascal, HTML, CSS, JS
-Code, Compile, Run and Debug online from anywhere in world.
-
-*******************************************************************************/
-#include <iostream>
 #include <vector>
 #include <cassert>
 
-using namespace std;
+std::vector<int> Color::waveLengths;
 
-Color::Color() {};
+void Color::setWaveLengths(int start, int end, int step) {
+    // РЎРѕР·РґР°РµРј РјР°СЃСЃРёРІ РґР»РёРЅ РІРѕР»РЅ СЃ РѕРїСЂРµРґРµР»РµРЅРЅС‹Рј С€Р°РіРѕРј
+    waveLengths.clear();
+    for (int i = start; i <= end; i += step) {
+      waveLengths.push_back(i);
+    }
+}
 
-Color::Color(vector<float> colors) {
-    this->colors = colors;
+void Color::setWaveLengths(const std::vector<int>& waves) {
+    waveLengths = waves;
 };
 
-void Color::setColors(vector<float> colors) {
+Color::Color() : colors(waveLengths.size(), 0) {};
+
+Color::Color(const std::vector<float>& colors) : colors(colors) {}
+
+void Color::setColors(const std::vector<float>& colors) {
     this->colors = colors;
 }
 
-void Color::setColors(int start, int end, int step) {
-    // создаем массив цветов с определенным шагом
-    vector<float> newColors;
-    for (int i = start; i <= end; i += step) {
-        newColors.push_back(i * 1e-9);
-    }
-    this->colors = newColors;
+std::vector<float> Color::getColors() const {
+    return colors;
 }
 
-vector<float> Color::getColors() {
-    return this->colors;
-}
-
-Color Color::operator+(Color color) {
+Color Color::operator+(const Color& color) const {
     assert(this->colors.size() == color.colors.size());
 
-    for (int i = 0; i < this->colors.size(); i++) {
-        this->colors[i] += color.colors[i];
+    Color result;
+
+    for (int i = 0; i < colors.size(); i++) {
+        result.colors[i] = colors[i] + color.colors[i];
     }
 
-    return *this;
+    return result;
 }
 
-Color Color::operator+(float value) {
-    for (int i = 0; i < this->colors.size(); i++) {
-        this->colors[i] += value;
+Color Color::operator+(float value) const {
+    Color result;
+
+    for (int i = 0; i < colors.size(); i++) {
+        result.colors[i] = colors[i] + value;
     }
 
-    return *this;
+    return result;
 }
 
-Color Color::operator-(Color color) {
+Color Color::operator-(const Color& color) const {
     assert(this->colors.size() == color.colors.size());
 
-    for (int i = 0; i < this->colors.size(); i++) {
-        this->colors[i] -= color.colors[i];
+    Color result;
+
+    for (int i = 0; i < colors.size(); i++) {
+      result.colors[i] = colors[i] - color.colors[i];
     }
 
-    return *this;
+    return result;
 }
 
 
-Color Color::operator-(float value) {
-    for (int i = 0; i < this->colors.size(); i++) {
-        this->colors[i] -= value;
+Color Color::operator-(float value) const {
+    Color result;
+
+    for (int i = 0; i < colors.size(); i++) {
+      result.colors[i] = colors[i] - value;
     }
 
-    return *this;
+    return result;
 }
 
-Color Color::operator*(float value) {
-    for (int i = 0; i < this->colors.size(); i++) {
-        this->colors[i] *= value;
+float Color::operator*(const Color& color) const {
+    assert(this->colors.size() == color.colors.size());
+
+    float result = 0;
+
+    for (int i = 0; i < colors.size(); i++) {
+      result += colors[i] * color.colors[i];
     }
 
-    return *this;
+    return result;
 }
 
+Color Color::operator*(float value) const {
+    Color result;
 
-void showVector(vector<float> v) {
-    for (int i = 0; i < v.size(); i++) {
-        cout << v[i] << " ";
+    for (int i = 0; i < colors.size(); i++) {
+      result.colors[i] = colors[i] * value;
     }
-    cout << endl;
+
+    return result;
 }
 
-vector<float> Color::waveLengths;
 
-void test() {
-    Color c1, c2, c3;
-    c1.setColors(400, 700, 100);
-    showVector(c1.getColors());
-
-    c2.setColors(450, 750, 100);
-    showVector(c2.getColors());
-
-    c1 = c1 + c2;
-    showVector(c1.getColors());
-
-    c1 = c1 + 400 * 1e-9;
-    showVector(c1.getColors());
-
-    c1 = c1 - c2;
-    showVector(c1.getColors());
-
-    c1 = c1 - 400 * 1e-9;
-    showVector(c1.getColors());
-
-    c1 = c1 * 0;
-    showVector(c1.getColors());
-
-    Color::setWaveLengths(380, 720, 10);
-    showVector(Color::waveLengths);
-
-    c1 + c3; // assert check
+float& Color::operator[](const size_t i) {
+    assert(i < colors.size());
+    return colors[i];
 }
 
-int main() {
-    test();
 
-    return 0;
+const float& Color::operator[](const size_t i) const {
+    assert(i < colors.size());
+    return colors[i];
 }
+
+//#include <iostream>
+//
+//template <typename T>
+//void showVector(const std::vector<T>& v) {
+//    for (int i = 0; i < v.size(); i++) {
+//        std::cout << v[i] << " ";
+//    }
+//    std::cout << std::endl;
+//}
+//
+//void test() {
+//    Color::setWaveLengths(500, 700, 100);
+//    showVector(Color::waveLengths);
+//
+//    Color c1, c2, c3;
+//    c1.setColors({400, 700, 100});
+//    showVector(c1.getColors());
+//
+//    c2.setColors({450, 750, 100});
+//    showVector(c2.getColors());
+//
+//    c1 = c1 + c2;
+//    showVector(c1.getColors());
+//
+//    c1 = c1 + 400;
+//    showVector(c1.getColors());
+//
+//    c1 = c1 - c2;
+//    showVector(c1.getColors());
+//
+//    c1 = c1 - 400;
+//    showVector(c1.getColors());
+//
+//    c1 = c1 * 2;
+//    showVector(c1.getColors());
+//
+//    std::cout << c1 * c2 << std::endl;
+//
+//    c1 = c1 * 0;
+//    showVector(c1.getColors());
+//
+//    c1 + c3; // assert check
+//}
+//
+//int main() {
+//    test();
+//
+//    return 0;
+//}
