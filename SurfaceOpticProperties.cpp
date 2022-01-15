@@ -3,7 +3,7 @@
 #include <random>
 
 float Kd::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
-  return (E * color) * coeff / M_PI;
+  return E.dot(color) * coeff / M_PI;
 }
 
 
