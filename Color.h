@@ -1,38 +1,28 @@
-// #pragma once
+#pragma once
 
 #include <vector>
-
-using namespace std;
+#include <cstdlib>
 
 class Color {
 private:
-    vector<float> colors;
+    std::vector<float> colors;
 public:
-    static vector<float> waveLengths;
+    static std::vector<int> waveLengths;
 
-    static void setWaveLengths(int start, int end, int step) {
-        // создаем массив цветов с определенным шагом
-        vector<float> newWaves;
-        for (int i = start; i <= end; i += step) {
-            newWaves.push_back(i * 1e-9);
-        }
-        waveLengths = newWaves;
-    };
-
-    static void setWaveLengths(vector<float> waves) {
-        waveLengths = waves;
-    };
+    static void setWaveLengths(int start, int end, int step);
+    static void setWaveLengths(const std::vector<int>& waves);
 
     Color();
-    Color(vector<float> colors);
-    void setColors(vector<float> x);
-    void setColors(int start, int end, int step);
-    vector<float> getColors();
-    void dot(float value);
-    Color operator+(Color color);
-    Color operator+(float value);
-    Color operator-(Color color);
-    Color operator-(float value);
+    Color(const std::vector<float>& colors);
+    void setColors(const std::vector<float>& x);
+    std::vector<float> getColors() const;
+    Color operator+(const Color& color) const;
+    Color operator+(float value) const;
+    Color operator-(const Color& color) const;
+    Color operator-(float value) const;
+    float operator*(const Color& color) const;
+    Color operator*(float value) const;
 
-    Color operator*(float value);
+    float &operator[](const size_t i);
+    const float &operator[](const size_t i) const;
 };

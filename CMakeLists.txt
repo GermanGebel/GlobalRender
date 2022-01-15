@@ -8,6 +8,8 @@ set(${PROJECT_NAME}_SOURCE_FILES
         Math.h
         Camera.h
         Camera.cpp
+        Color.h
+        Color.cpp
         Geometry.h
         Geometry.cpp
 #        Scene.h Удалено из-за нарушения ODR, необходимо восстанавливать по мере разработки, за пояснениями -> К Юле
