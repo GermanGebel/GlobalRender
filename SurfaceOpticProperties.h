@@ -17,9 +17,12 @@ public:
   float CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const override;
   Ray TransformRay(const Ray& ray, const Vec3f& N) const override;
 
+  const Color& getColor() const;
+  float getCoeff() const;
+
 private:
   Color color;
-  float k;
+  float coeff;
 };
 
 class Ks : public SurfaceOpticProperty {
@@ -27,9 +30,12 @@ public:
   float CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const override;
   Ray TransformRay(const Ray& ray, const Vec3f& N) const override;
 
+  const Color& getColor() const;
+  float getCoeff() const;
+
 private:
   Color color;
-  float k;
+  float coeff;
 };
 
 class Ktd : public SurfaceOpticProperty {
@@ -37,9 +43,12 @@ public:
   float CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const override;
   Ray TransformRay(const Ray& ray, const Vec3f& N) const override;
 
+  const Color& getColor() const;
+  float getCoeff() const;
+
 private:
   Color color;
-  float k;
+  float coeff;
 };
 
 class Kts : public SurfaceOpticProperty {
@@ -47,7 +56,10 @@ public:
   float CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const override;
   Ray TransformRay(const Ray& ray, const Vec3f& N) const override;
 
+  const Color& getColor() const;
+  float getCoeff() const;
+
 private:
   Color color;
-  float k;
+  float coeff;
 };
