@@ -18,7 +18,7 @@ struct Ray {
 
   Ray() {}
 
-  Ray(const vec3& origin, const vec3& direction, float ks = 1)
+  Ray(const Vec3f& origin, const Vec3f& direction, float ks = 1)
   : origin(origin), direction(direction), ks(ks), luminance(SpectralValues(0)) {}
 
   void print() const {
