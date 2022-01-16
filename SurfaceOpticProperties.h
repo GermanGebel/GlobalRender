@@ -2,12 +2,7 @@
 
 #include "Color.h"
 #include "Math.h"
-
-struct Ray { // TODO убрать, когда появится новый Ray
-  Vec3f origin;
-  Vec3f direction;
-  Color color;
-};
+#include "Ray.h"
 
 class SurfaceOpticProperty {
 public:
