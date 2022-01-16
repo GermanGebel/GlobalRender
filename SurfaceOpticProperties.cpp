@@ -27,7 +27,7 @@ Ray Kd::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionPo
 
   transformedRay.direction = direction;
   transformedRay.origin = intersectionPoint;
-  transformedRay.color = color * ray.color;
+  transformedRay.color = color * ray.color * coeff;
 
   return transformedRay;
 }
@@ -50,14 +50,14 @@ float Ks::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, con
 
 Ray Ks::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionPoint) const {
     Vec3f direction = ray.direction;
-    Vec3f specularDirection = direction - 2 * N * (direction * N);
+    Vec3f specularDirection = direction - N * 2 * (direction * N);
     specularDirection = specularDirection.normalize();
 
     Ray transformedRay;
 
     transformedRay.direction = specularDirection;
     transformedRay.origin = intersectionPoint;
-    transformedRay.color = color * ray.color;
+    transformedRay.color = color * ray.color * coeff;
 
     return transformedRay;
 }
@@ -97,7 +97,7 @@ Ray Ktd::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionP
 
   transformedRay.direction = direction;
   transformedRay.origin = intersectionPoint;
-  transformedRay.color = color * ray.color;
+  transformedRay.color = color * ray.color * coeff;
 
   return transformedRay;
 }
