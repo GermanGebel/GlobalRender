@@ -19,13 +19,7 @@ struct Ray {
   Ray() {}
 
   Ray(const Vec3f& origin, const Vec3f& direction, float ks = 1)
-  : origin(origin), direction(direction), ks(ks), luminance(SpectralValues(0)) {}
-
-  void print() const {
-    origin.print();
-    direction.print();
-    std::cout << "ks = " << ks << std::endl;
-  }
+  : origin(origin), direction(direction), ks(ks), luminance(Color()) {}
 };
 
 #endif //RAYTRACING_RAY_H
