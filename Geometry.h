@@ -1,13 +1,9 @@
 #pragma once
 
 #include "Math.h"
-#include <vector>
+#include "Ray.h"
 
-struct Ray // TODO убрать, когда появится новый Ray
-{
-  Vec3f origin;
-  Vec3f direction;
-};
+#include <vector>
 
 class Mesh;
 
