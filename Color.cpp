@@ -96,6 +96,28 @@ Color Color::operator*(float value) const {
     return result;
 }
 
+Color Color::operator/(const Color& color) const {
+    assert(this->colors.size() == color.colors.size());
+
+    Color result;
+
+    for (int i = 0; i < colors.size(); i++) {
+      result.colors[i] = colors[i] / color.colors[i];
+    }
+
+    return result;
+}
+
+Color Color::operator/(float value) const {
+    Color result;
+
+    for (int i = 0; i < colors.size(); i++) {
+      result.colors[i] = colors[i] / value;
+    }
+
+    return result;
+}
+
 float Color::dot(const Color& color) const {
   assert(this->colors.size() == color.colors.size());
 

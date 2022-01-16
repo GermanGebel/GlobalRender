@@ -2,8 +2,8 @@
 
 #include <random>
 
-float Kd::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
-  return E.dot(color) * coeff / M_PI;
+Color Kd::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
+  return (E * color) * coeff / M_PI;
 }
 
 
@@ -43,8 +43,8 @@ float Kd::getCoeff() const {
 }
 
 
-float Ks::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
-    return 0;
+Color Ks::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
+    return Color();
 }
 
 
@@ -72,8 +72,8 @@ float Ks::getCoeff() const {
 }
 
 
-float Ktd::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
-  return 0;
+Color Ktd::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
+  return Color();
 }
 
 
@@ -113,8 +113,8 @@ float Ktd::getCoeff() const {
 }
 
 
-float Kts::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
-  return 0;
+Color Kts::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
+  return Color();
 }
 
 
