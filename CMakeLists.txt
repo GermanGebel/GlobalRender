@@ -14,6 +14,7 @@ set(${PROJECT_NAME}_SOURCE_FILES
         Geometry.cpp
         Material.h
         Material.cpp
+        Ray.h
         SurfaceOpticProperties.h
         SurfaceOpticProperties.cpp
 #        Scene.h Удалено из-за нарушения ODR, необходимо восстанавливать по мере разработки, за пояснениями -> К Юле
