@@ -1,48 +1,53 @@
 #pragma once
-
-#include <vector>
-#include <random>
+#include "Math.h"
+#include "Light.h"
 #include "structs.h"
+#include "Ray.h"
+#include "Geometry.h"
 
 class Light {
 public:
-  Light(const vec3& origin, double intensity, const SpectralValues& kd);
-  virtual SpectralValues calculateLuminance(const vec3& hitPoint,
-                                            const vec3& N,
-                                            const std::vector<Triangle>& triangles,
-                                            int hitTriangleId) const = 0;
+    Light(const Color& ks, std::vector<float> intensityTable, Vec3f normal, float flux = -1);
+    Color getKs() const;
+    virtual ~Light()=default;
+    virtual Ray   fireRay() = 0;
+    virtual Vec3f getRandomPointOfSurf() = 0;
+    float calculateIlluminance(Vec3f startRayPoint, Vec3f endRayPoint);
 
 protected:
-  const vec3 origin_;
-  const double intensity_;
-  const SpectralValues kd_;
+    float calculateFlux();
+    Vec3f getDir();
+    std::vector<float> intensityTableExtension();
 
-  SpectralValues luminanceFromPoint(const vec3& lightPoint,
-                                    const vec3& hitPoint,
-                                    const vec3& N,
-                                    const std::vector<Triangle>& triangles,
-                                    int hitTriangleId) const;
+protected:
+    float flux_;
+    Vec3f normal_;
+    std::vector<float> intensityTable_;
+    Color ks_;
+    std::vector<float> tabularProbabilities;
+    std::vector<Vec3f> rotationMatrix;
 };
 
 class PointLight : public Light {
 public:
-  PointLight(const vec3& origin, double intensity, const SpectralValues& kd);
-  SpectralValues calculateLuminance(const vec3& hitPoint,
-                                    const vec3& N,
-                                    const std::vector<Triangle>& triangles,
-                                    int hitTriangleId) const override;
+    PointLight(const Color& ks, const std::vector<float> &intensityTable,
+               const Vec3f &origin, const Vec3f &normal, float flux = -1);
+    Ray fireRay() override;
+    Vec3f getRandomPointOfSurf() override;
+private:
+    Vec3f origin_;
 };
 
 class RectangleLight : public Light {
 public:
-  RectangleLight(const vec3& origin, double intensity, const SpectralValues& kd, double xSize, double ySize);
-  SpectralValues calculateLuminance(const vec3& hitPoint,
-                                    const vec3& N,
-                                    const std::vector<Triangle>& triangles,
-                                    int hitTriangleId) const override;
+    RectangleLight(const Color& ks, const std::vector<float> &intensityTable,
+                   const Vec3f &origin, const Vec3f &normal, const Mesh &mesh, float flux = -1);
+    float calculateLuminance(const Vec3f& rayDir) ;
+    Vec3f getRandomPointOfSurf() override;
+    Ray fireRay() override;
 
 private:
-  const double xSize_;
-  const double ySize_;
-  static const int SUBDIVISION = 3;
+    std::vector<float> luminanceTable_;
+
+    Mesh geometryMesh_;
 };

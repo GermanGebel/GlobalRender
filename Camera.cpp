@@ -3,8 +3,8 @@
 //
 
 #include "Camera.h"
+#include "structs.h"
 
-#include <iostream>
 #include <cstdlib>
 #include <cmath>
 
@@ -21,39 +21,10 @@ Camera::Camera(const Vec3f eye, const Vec3f center, const float fov, const int w
      * */
     Vec3f direct = Vec3f(center.x - eye.x, center.y - eye.y, eye.z - center.z).normalize();  //center - eye;
     dist = float(WIDTH) / 2.0 * (1.0/tan(3.14/180.0 * float(fov)/2.0));
-    std::cout << "dir: (" << direct.x << ", " << direct.y << ", " << -direct.z << ") dist" << dist << std::endl;
-    if (direct.x == 0.0 && direct.y == 0.0){
-        if (direct.z == 1.0) return ;
-        if (direct.z == -1.0){
-            matrixOfRotation[2].z = 1;
-            return ;
-        }
-    }
-    Vec3f dirToMatrix(0.0,0.0,-1);
-    Vec3f v = cross(direct, dirToMatrix);
-    float c = direct*dirToMatrix; //dot mul
-    float s = v.norm(); //norm or length of vector
-    Vec3f kmat[3] = {Vec3f{0, -v.z, v.y}, Vec3f{v.z, 0, -v.x}, Vec3f{-v.y, v.x, 0}};
-    Vec3f kmatDotKmat[3] = {Vec3f{kmat[0].x * kmat[0].x + kmat[0].y * kmat[1].x + kmat[0].z * kmat[2].x,                 //kmatDotKmat = kmat * kmat
-                                  kmat[0].x * kmat[0].y + kmat[0].y * kmat[1].y + kmat[0].z * kmat[2].y,
-                                  kmat[0].x * kmat[0].z + kmat[0].y * kmat[1].z + kmat[0].z * kmat[2].z},
-                            Vec3f{kmat[1].x * kmat[0].x + kmat[1].y * kmat[1].x + kmat[1].z * kmat[2].x,
-                                  kmat[1].x * kmat[0].y + kmat[1].y * kmat[1].y + kmat[1].z * kmat[2].y,
-                                  kmat[1].x * kmat[0].z + kmat[1].y * kmat[1].z + kmat[1].z * kmat[2].z},
-                            Vec3f{kmat[2].x * kmat[0].x + kmat[2].y * kmat[1].x + kmat[2].z * kmat[2].x,
-                                  kmat[2].x * kmat[0].y + kmat[2].y * kmat[1].y + kmat[2].z * kmat[2].y,
-                                  kmat[2].x * kmat[0].z + kmat[2].y * kmat[1].z + kmat[2].z * kmat[2].z}
-                            };
-    matrixOfRotation[0] = Vec3f{float(1.0 + kmat[0].x+kmatDotKmat[0].x*((1.0-c)/(s*s))),
-                                float(0.0 + kmat[0].y+kmatDotKmat[0].y*((1.0-c)/(s*s))),
-                                float(0.0 + kmat[0].z+kmatDotKmat[0].z*((1.0-c)/(s*s)))};
-    matrixOfRotation[1] = Vec3f{float(0.0 + kmat[1].x+kmatDotKmat[1].x*((1.0-c)/(s*s))),
-                                float(1.0 + kmat[1].y+kmatDotKmat[1].y*((1.0-c)/(s*s))),
-                                float(0.0 + kmat[1].z+kmatDotKmat[1].z*((1.0-c)/(s*s)))};
-    matrixOfRotation[2] = Vec3f{float(0.0 + kmat[2].x+kmatDotKmat[2].x*((1.0-c)/(s*s))),
-                                float(0.0 + kmat[2].y+kmatDotKmat[2].y*((1.0-c)/(s*s))),
-                                float(1.0 + kmat[2].z+kmatDotKmat[2].z*((1.0-c)/(s*s)))};
 
+    Vec3f dirToMatrix(0.0,0.0,1);
+
+    matrixOfRotation = getRotationMatrix(dirToMatrix, direct);
 
 }
 
@@ -79,17 +50,21 @@ Ray Camera::castRay(int X, int Y) {
     float h = float(HEIGHT) / 2.0 - 0.5;
     float w = float(WIDTH) / 2.0 - 0.5;
 
-    Ray newRay{float(-w + X), float(h - Y), dist};
+    Vec3f direction{float(-w + X), float(h - Y), dist};
 
-    Vec3f vec1 = Vec3f(newRay.x * matrixOfRotation[0].x + newRay.y * matrixOfRotation[0].y + newRay.z * matrixOfRotation[0].z,
-                       newRay.x * matrixOfRotation[1].x + newRay.y * matrixOfRotation[1].y + newRay.z * matrixOfRotation[1].z,
-                       newRay.x * matrixOfRotation[2].x + newRay.y * matrixOfRotation[2].y + newRay.z * matrixOfRotation[2].z).normalize();
+    direction = Vec3f {matrixOfRotation[0].x * direction.x  + matrixOfRotation[0].y * direction.y + matrixOfRotation[0].z * direction.z,
+                     matrixOfRotation[1].x * direction.x  + matrixOfRotation[1].y * direction.y + matrixOfRotation[1].z * direction.z,
+                     matrixOfRotation[2].x * direction.x  + matrixOfRotation[2].y * direction.y + matrixOfRotation[2].z * direction.z,
+    }.normalize();
 
-    std::cout << "vec (" << X << ", " << Y << "): " << vec1.x << " " << vec1.y << " " << vec1.z << std::endl;
-    return Ray{vec1.x,vec1.y,vec1.z};
+    Ray newRay;
+    newRay.origin = eye;
+    newRay.direction = direction;
+
+    return newRay;
 }
 
-Ray** Camera::renderMonteCarlo(int N) {
+std::vector<std::vector<Ray>> Camera::renderMonteCarlo(int N) {
     /*
      * input: N - количество лучей для рандомного испускания
      * output: matrix - матрица лучей (с их точками начала и направления)
@@ -97,9 +72,9 @@ Ray** Camera::renderMonteCarlo(int N) {
      * функция выпускает N случайны лучей из камеры
      * */
 
-    Ray** matrix = new Ray*[HEIGHT];
+    std::vector<std::vector<Ray>> matrix(HEIGHT);
     for (int i = 0; i < HEIGHT; i++){
-        matrix[i] = new Ray[WIDTH];
+        matrix[i].resize(WIDTH);
     }
 
     for (int i = 0; i < N; i++){
@@ -111,7 +86,7 @@ Ray** Camera::renderMonteCarlo(int N) {
 }
 
 
-Ray** Camera::render() {
+std::vector<std::vector<Ray>> Camera::render() {
 
     /*
      * output: matrix - матрица лучей (с их точками начала и направления)
@@ -119,9 +94,9 @@ Ray** Camera::render() {
      * функция по лучу в каждую точку камеры
      * */
 
-    Ray** matrix = new Ray*[HEIGHT];
+    std::vector<std::vector<Ray>> matrix(HEIGHT);
     for (int i = 0; i < HEIGHT; i++){
-        matrix[i] = new Ray[WIDTH];
+        matrix[i].resize(WIDTH);
     }
 
     for (int i = 0; i < HEIGHT; i++){

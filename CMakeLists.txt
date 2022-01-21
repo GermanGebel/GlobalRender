@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.17)
 project(RayTracing)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}") # -fopenmp")
 set(${PROJECT_NAME}_SOURCE_FILES
@@ -12,7 +12,10 @@ set(${PROJECT_NAME}_SOURCE_FILES
         Color.cpp
         Geometry.h
         Geometry.cpp
+        Light.h
+        Light.cpp
         Ray.h
+
 #        Scene.h Удалено из-за нарушения ODR, необходимо восстанавливать по мере разработки, за пояснениями -> К Юле
 #        Scene.cpp Удалено из-за нарушения ODR, необходимо восстанавливать по мере разработки, за пояснениями -> К Юле
 #        Light.h Удалено из-за нарушения ODR, необходимо восстанавливать по мере разработки, за пояснениями -> К Юле
