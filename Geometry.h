@@ -14,6 +14,7 @@ struct Triangle {
   Vec3f getNormal(const Vec3f& direction) const;
   bool isInside(const Vec3f& point) const;
   float getArea() const;
+  Vec3f randomSurfPoint() const;
 
   Mesh* mesh;
   int v1, v2, v3;

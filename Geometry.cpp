@@ -68,6 +68,24 @@ float Triangle::getArea() const {
 }
 
 
+Vec3f Triangle::randomSurfPoint() const {
+  static std::mt19937 gen;
+  static std::uniform_real_distribution<float> dist(0, 1);
+
+  Vec3f edge0 = mesh->ownPoints_[v2] - mesh->ownPoints_[v1];
+  Vec3f edge1 = mesh->ownPoints_[v3] - mesh->ownPoints_[v1];
+
+  float xi1 = dist(gen);
+  float xi2 = dist(gen);
+  if (xi1 + xi2 > 1) {
+    xi1 = 1 - xi1;
+    xi2 = 1 - xi2;
+  }
+
+  return edge0 * xi1 + edge1 * xi2 + mesh->ownPoints_[v1];
+}
+
+
 Vec3f Mesh::getNormal(const Vec3f& intersectionPoint, const Vec3f& direction) const {
   for (const auto& triangle : triangles_) {
     if (triangle.isInside(intersectionPoint))
@@ -79,18 +97,12 @@ Vec3f Mesh::getNormal(const Vec3f& intersectionPoint, const Vec3f& direction) co
 
 
 bool Mesh::hitTest(const Ray& ray, float& t) const {
-  float minT = std::numeric_limits<float>::max();
   bool result = false;
 
   for (const auto& triangle : triangles_) {
     if (triangle.hitTest(ray, t)) {
-      minT = std::min(minT, t);
       result = true;
     }
-  }
-
-  if (result) {
-    t = minT;
   }
 
   return result;
@@ -98,24 +110,27 @@ bool Mesh::hitTest(const Ray& ray, float& t) const {
 
 
 Vec3f Mesh::randomSurfPoint() const {
-  std::mt19937 gen;
-  std::uniform_int_distribution<int> triangle_dist(0, triangles_.size() - 1);
-  std::uniform_real_distribution<float> dist(0, 1);
+  static std::mt19937 gen;
+  static std::uniform_real_distribution<float> dist(0, 1);
 
-  Triangle triangle = triangles_[triangle_dist(gen)];
-
-  Vec3f v1 = ownPoints_[triangle.v1];
-  Vec3f v2 = ownPoints_[triangle.v2];
-  Vec3f v3 = ownPoints_[triangle.v3];
-
-  float xi1 = dist(gen);
-  float xi2 = dist(gen);
-  if (xi1 + xi2 > 1) {
-    xi1 = 1 - xi1;
-    xi2 = 1 - xi2;
+  std::vector<float> areas(triangles_.size());
+  areas[0] = 0;
+  for (int i = 1; i < triangles_.size(); ++i) {
+    areas[i] = areas[i - 1] + triangles_[i - 1].getArea();
   }
 
-  return (v2 - v1) * xi1 + (v3 - v1) * xi2 + v1;
+  float xi = dist(gen) * (areas.back() + triangles_.back().getArea());
+  int l = 0, r = areas.size();
+  while (r - l > 1) {
+    int m = (l + r) / 2;
+    if (areas[m] < xi) {
+      l = m;
+    } else {
+      r = m;
+    }
+  }
+
+  return triangles_[l].randomSurfPoint();
 }
 
 
@@ -159,8 +174,8 @@ bool Sphere::hitTest(const Ray& ray, float& t) const {
 
 
 Vec3f Sphere::randomSurfPoint() const {
-  std::mt19937 gen;
-  std::uniform_real_distribution<float> dist(0, 1);
+  static std::mt19937 gen;
+  static std::uniform_real_distribution<float> dist(0, 1);
 
   float xi1 = dist(gen);
   float xi2 = dist(gen);
