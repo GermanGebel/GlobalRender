@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SurfaceOpticProperties.h"
+#include "BRDF.h"
 
 class Material {
 public:
@@ -10,9 +11,10 @@ public:
 private:
   SurfaceOpticProperty* chooseEvent(const Ray& ray) const;
 
-private:
+public:
   Kd *kd;
   Ks *ks;
   Ktd *ktd;
   Kts *kts;
+  BRDF *brdf;
 };

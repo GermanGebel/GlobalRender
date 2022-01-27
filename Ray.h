@@ -5,8 +5,17 @@
 #include "Color.h"
 #include "Math.h"
 
-struct Container {
+enum TransformRayEvent {
+  e_KD,
+  e_KS,
+  e_KTD,
+  e_KTS,
+  e_BRDF,
+  e_KILL
+};
 
+struct Container {
+  TransformRayEvent lastEvent;
 };
 
 struct Ray {

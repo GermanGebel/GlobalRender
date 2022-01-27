@@ -2,14 +2,19 @@
 
 #include <random>
 
+Kd::Kd(const Color& color, float coeff)
+    : color(color)
+    , coeff(coeff)
+{}
+
 Color Kd::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
   return (E * color) * coeff / M_PI;
 }
 
 
 Ray Kd::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionPoint) const {
-  std::mt19937 gen;
-  std::uniform_real_distribution<float> dist(0, 1);
+  static std::mt19937 gen;
+  static std::uniform_real_distribution<float> dist(0, 1);
 
   float R = 1;
   float phi = 2 * M_PI * dist(gen);
@@ -28,6 +33,7 @@ Ray Kd::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionPo
   transformedRay.direction = direction;
   transformedRay.origin = intersectionPoint;
   transformedRay.color = color * ray.color * coeff;
+  transformedRay.trash.lastEvent = TransformRayEvent::e_KD;
 
   return transformedRay;
 }
@@ -41,6 +47,12 @@ const Color& Kd::getColor() const {
 float Kd::getCoeff() const {
   return coeff;
 }
+
+
+Ks::Ks(const Color& color, float coeff)
+    : color(color)
+    , coeff(coeff)
+{}
 
 
 Color Ks::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
@@ -58,6 +70,7 @@ Ray Ks::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionPo
     transformedRay.direction = specularDirection;
     transformedRay.origin = intersectionPoint;
     transformedRay.color = color * ray.color * coeff;
+  transformedRay.trash.lastEvent = TransformRayEvent::e_KS;
 
     return transformedRay;
 }
@@ -72,14 +85,20 @@ float Ks::getCoeff() const {
 }
 
 
+Ktd::Ktd(const Color& color, float coeff)
+    : color(color)
+    , coeff(coeff)
+{}
+
+
 Color Ktd::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
   return Color();
 }
 
 
 Ray Ktd::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionPoint) const {
-  std::mt19937 gen;
-  std::uniform_real_distribution<float> dist(0, 1);
+  static std::mt19937 gen;
+  static std::uniform_real_distribution<float> dist(0, 1);
 
   float R = 1;
   float phi = 2 * M_PI * dist(gen);
@@ -98,6 +117,7 @@ Ray Ktd::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionP
   transformedRay.direction = direction;
   transformedRay.origin = intersectionPoint;
   transformedRay.color = color * ray.color * coeff;
+  transformedRay.trash.lastEvent = TransformRayEvent::e_KTD;
 
   return transformedRay;
 }
@@ -111,6 +131,12 @@ const Color& Ktd::getColor() const {
 float Ktd::getCoeff() const {
   return coeff;
 }
+
+
+Kts::Kts(const Color& color, float coeff)
+    : color(color)
+    , coeff(coeff)
+{}
 
 
 Color Kts::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
