@@ -10,24 +10,24 @@ Triangle::Triangle(Mesh* mesh, int v1, int v2, int v3)
 {}
 
 
-bool Triangle::hitTest(const Ray& ray, double& t) const {
-  vec3 e1 = mesh->ownPoints_[v2] - mesh->ownPoints_[v1];
-  vec3 e2 = mesh->ownPoints_[v3] - mesh->ownPoints_[v1];
-  vec3 pvec = ray.direction.cross(e2);
-  double det = e1.dot(pvec);
+bool Triangle::hitTest(const Ray& ray, float& t) const {
+  Vec3f e1 = mesh->ownPoints_[v2] - mesh->ownPoints_[v1];
+  Vec3f e2 = mesh->ownPoints_[v3] - mesh->ownPoints_[v1];
+  Vec3f pvec = cross(ray.direction, e2);
+  float det = e1 * pvec;
 
   if (det < 1e-8 && det > -1e-8) return false;
 
-  double inv_det = 1 / det;
-  vec3 tvec = ray.origin - mesh->ownPoints_[v1];
-  double u = tvec.dot(pvec) * inv_det;
+  float inv_det = 1 / det;
+  Vec3f tvec = ray.origin - mesh->ownPoints_[v1];
+  float u = (tvec * pvec) * inv_det;
   if (u < 0 || u > 1) return false;
 
-  vec3 qvec = tvec.cross(e1);
-  double v = ray.direction.dot(qvec) * inv_det;
+  Vec3f qvec = cross(tvec, e1);
+  float v = (ray.direction * qvec) * inv_det;
   if (v < 0 || v + u > 1) return false;
 
-  double dist = e2.dot(qvec) * inv_det;
+  float dist = (e2 * qvec) * inv_det;
   if (dist < t && dist > 1e-8) {
     t = dist;
     return true;
@@ -36,31 +36,57 @@ bool Triangle::hitTest(const Ray& ray, double& t) const {
 }
 
 
-vec3 Triangle::getNormal(const vec3& direction) const {
-  vec3 N = (mesh->ownPoints_[v2] - mesh->ownPoints_[v1]).cross(mesh->ownPoints_[v3] - mesh->ownPoints_[v1]).normalize();
-  return N.dot(direction) < 0 ? -N : N;
+Vec3f Triangle::getNormal(const Vec3f& direction) const {
+  Vec3f N = cross(mesh->ownPoints_[v2] - mesh->ownPoints_[v1], mesh->ownPoints_[v3] - mesh->ownPoints_[v1]).normalize();
+  return N * direction < 0 ? -N : N;
 }
 
 
-bool Triangle::isInside(const vec3& point) const {
-  vec3 edge0 = mesh->ownPoints_[v2] - mesh->ownPoints_[v1];
-  vec3 edge1 = mesh->ownPoints_[v3] - mesh->ownPoints_[v2];
+bool Triangle::isInside(const Vec3f& point) const {
+  Vec3f edge0 = mesh->ownPoints_[v2] - mesh->ownPoints_[v1];
+  Vec3f edge1 = mesh->ownPoints_[v3] - mesh->ownPoints_[v1];
 
-  vec3 C0 = point - mesh->ownPoints_[v1];
-  vec3 C1 = point - mesh->ownPoints_[v2];
-  vec3 C2 = point - mesh->ownPoints_[v3];
+  Vec3f C0 = point - mesh->ownPoints_[v1];
+  Vec3f C1 = point - mesh->ownPoints_[v2];
+  Vec3f C2 = point - mesh->ownPoints_[v3];
 
-  double S = edge0.cross(edge1).length() / 2;
+  float S = cross(edge0, edge1).length() / 2;
 
-  double S1 = C0.cross(C1).length() / 2;
-  double S2 = C1.cross(C2).length() / 2;
-  double S3 = C2.cross(C0).length() / 2;
+  float S1 = cross(C0, C1).length() / 2;
+  float S2 = cross(C1, C2).length() / 2;
+  float S3 = cross(C2, C0).length() / 2;
 
   return fabs(S - (S1 + S2 + S3)) < 1e-6;
 }
 
 
-vec3 Mesh::getNormal(const vec3& intersectionPoint, const vec3& direction) const {
+float Triangle::getArea() const {
+  Vec3f edge0 = mesh->ownPoints_[v2] - mesh->ownPoints_[v1];
+  Vec3f edge1 = mesh->ownPoints_[v3] - mesh->ownPoints_[v1];
+
+  return cross(edge0, edge1).length() / 2;
+}
+
+
+Vec3f Triangle::randomSurfPoint() const {
+  static std::mt19937 gen;
+  static std::uniform_real_distribution<float> dist(0, 1);
+
+  Vec3f edge0 = mesh->ownPoints_[v2] - mesh->ownPoints_[v1];
+  Vec3f edge1 = mesh->ownPoints_[v3] - mesh->ownPoints_[v1];
+
+  float xi1 = dist(gen);
+  float xi2 = dist(gen);
+  if (xi1 + xi2 > 1) {
+    xi1 = 1 - xi1;
+    xi2 = 1 - xi2;
+  }
+
+  return edge0 * xi1 + edge1 * xi2 + mesh->ownPoints_[v1];
+}
+
+
+Vec3f Mesh::getNormal(const Vec3f& intersectionPoint, const Vec3f& direction) const {
   for (const auto& triangle : triangles_) {
     if (triangle.isInside(intersectionPoint))
       return triangle.getNormal(direction);
@@ -70,89 +96,100 @@ vec3 Mesh::getNormal(const vec3& intersectionPoint, const vec3& direction) const
 }
 
 
-bool Mesh::hitTest(const Ray& ray, double& t) const {
-  double minT = std::numeric_limits<double>::max();
+bool Mesh::hitTest(const Ray& ray, float& t) const {
   bool result = false;
 
   for (const auto& triangle : triangles_) {
     if (triangle.hitTest(ray, t)) {
-      minT = std::min(minT, t);
       result = true;
     }
-  }
-
-  if (result) {
-    t = minT;
   }
 
   return result;
 }
 
 
-vec3 Mesh::randomSurfPoint() const {
-  std::mt19937 gen;
-  std::uniform_int_distribution<int> triangle_dist(0, triangles_.size() - 1);
-  std::uniform_real_distribution<double> dist(0, 1);
+Vec3f Mesh::randomSurfPoint() const {
+  static std::mt19937 gen;
+  static std::uniform_real_distribution<float> dist(0, 1);
 
-  Triangle triangle = triangles_[triangle_dist(gen)];
-
-  vec3 v1 = ownPoints_[triangle.v1];
-  vec3 v2 = ownPoints_[triangle.v2];
-  vec3 v3 = ownPoints_[triangle.v3];
-
-  double xi1 = dist(gen);
-  double xi2 = dist(gen);
-  if (xi1 + xi2 > 1) {
-    xi1 = 1 - xi1;
-    xi2 = 1 - xi2;
+  std::vector<float> areas(triangles_.size());
+  areas[0] = 0;
+  for (int i = 1; i < triangles_.size(); ++i) {
+    areas[i] = areas[i - 1] + triangles_[i - 1].getArea();
   }
 
-  return (v2 - v1) * xi1 + (v3 - v1) * xi2 + v1;
+  float xi = dist(gen) * (areas.back() + triangles_.back().getArea());
+  int l = 0, r = areas.size();
+  while (r - l > 1) {
+    int m = (l + r) / 2;
+    if (areas[m] < xi) {
+      l = m;
+    } else {
+      r = m;
+    }
+  }
+
+  return triangles_[l].randomSurfPoint();
 }
 
 
-Sphere::Sphere(const vec3& center, double radius)
+float Mesh::getSurfaceArea() const {
+  float area = 0.0;
+  for (const auto& triangle : triangles_) {
+    area += triangle.getArea();
+  }
+  return area;
+}
+
+
+Sphere::Sphere(const Vec3f& center, float radius)
     : center_(center)
     , radius_(radius)
 {}
 
 
-vec3 Sphere::getNormal(const vec3& intersectionPoint, const vec3& direction) const {
-  vec3 N = (intersectionPoint - center_) / radius_;
-  return N.dot(direction) < 0 ? -N : N;
+Vec3f Sphere::getNormal(const Vec3f& intersectionPoint, const Vec3f& direction) const {
+  Vec3f N = (intersectionPoint - center_).normalize();
+  return N * direction < 0 ? -N : N;
 }
 
 
-bool Sphere::hitTest(const Ray& ray, double& t) const {
-  const vec3 oc = ray.origin - center_;
-  const double a = ray.direction.dot(ray.direction);
-  const double b = 2 * oc.dot(ray.direction);
-  const double c = oc.dot(oc) - radius_ * radius_;
-  double disc = b * b - 4 * a * c;
+bool Sphere::hitTest(const Ray& ray, float& t) const {
+  const Vec3f oc = ray.origin - center_;
+  const float a = ray.direction * ray.direction;
+  const float b = 2 * (oc * ray.direction);
+  const float c = oc * oc - radius_ * radius_;
+  float disc = b * b - 4 * a * c;
 
   if (disc < 1e-4) return false;
 
   disc = sqrt(disc);
-  const double t0 = (-b - disc) / (2 * a);
-  const double t1 = (-b + disc) / (2 * a);
+  const float t0 = (-b - disc) / (2 * a);
+  const float t1 = (-b + disc) / (2 * a);
   t = (t0 < t1) ? t0 : t1;
 
   return true;
 }
 
 
-vec3 Sphere::randomSurfPoint() const {
-  std::mt19937 gen;
-  std::uniform_real_distribution<double> dist(0, 1);
+Vec3f Sphere::randomSurfPoint() const {
+  static std::mt19937 gen;
+  static std::uniform_real_distribution<float> dist(0, 1);
 
-  double xi1 = dist(gen);
-  double xi2 = dist(gen);
+  float xi1 = dist(gen);
+  float xi2 = dist(gen);
 
-  double phi = 2 * M_PI * xi1;
-  double z = -radius_ + 2 * radius_ * xi2;
-  double theta = acos(z / radius_);
-  double x = radius_ * sin(theta) * cos(phi);
-  double y = radius_ * sin(theta) * sin(phi);
+  float phi = 2 * M_PI * xi1;
+  float z = -radius_ + 2 * radius_ * xi2;
+  float theta = acos(z / radius_);
+  float x = radius_ * sin(theta) * cos(phi);
+  float y = radius_ * sin(theta) * sin(phi);
 
-  return vec3(x, y, z);
+  return Vec3f(x, y, z);
+}
+
+
+float Sphere::getSurfaceArea() const {
+  return 4 * M_PI * radius_ * radius_;
 }
