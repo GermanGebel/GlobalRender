@@ -11,4 +11,5 @@ private:
   Ks *ks;
   Ktd *ktd;
   Kts *kts;
+//  float environmentProperty;
 };

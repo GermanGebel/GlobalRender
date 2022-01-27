@@ -66,4 +66,5 @@ public:
 private:
   Color color;
   float coeff;
+  float environmentProperty;
 };
