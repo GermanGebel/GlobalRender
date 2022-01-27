@@ -145,11 +145,41 @@ Color Kts::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, co
 
 
 Ray Kts::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionPoint) const {
-  return Ray();
+    float nAir = 1.f;
+
+    Vec3f I = ray.direction;
+
+    float n1 = ray.envProp;
+    float n2 = environmentProperty; // надо проверить
+
+    float cosinus = -max(-1.f, min(1.f, I * N));
+
+    if (cosinus < 0) { // луч выходит из объекта в воздух
+        cosinus = -max(-1.f, min(1.f, I * (-N)));
+        n2 = nAir;
+    }
+
+    float eta = n1 / n2;
+    float k = 1 - eta * eta * (1 - cosinus * cosinus);
+
+    Ray transformedRay;
+
+    if (k < 0) {
+        transformedRay.direction = Vec3f(1, 0, 0);
+    } else {
+        transformedRay.direction = I * eta + N * (eta * cosi - sqrtf(k));
+    }
+
+    transformedRay.envProp = n2;
+    transformedRay.origin = intersectionPoint;
+    transformedRay.color = color * ray.color * coeff;
+
+    return transformedRay
+
 }
 
 
-const Color& Kts::getColor() const {
+const Color& Kts::getColor() const
   return color;
 }
 
