@@ -1,17 +1,19 @@
 #pragma once
 #include "Math.h"
+#include "Ray.h"
+#include "Scene.h"
 
 class Render {
 public:
-	void render(const std::string& outputFileName);
+  Render(Scene * scene_);
+//	void render(const std::string& outputFileName);
+	void renderZBuffer(const std::string& outputFileName)
 private:
 	struct HitPoint {
 		Vec3f point;
 		int triangleId;
 	};
 
-	HitPoint getIntersection(const Ray& ray);
-	SpectralValues getLuminance(const Ray& ray);
-
 	static const int ANTIALIASING_FACTOR = 4;
+	Scene *scene;
 };

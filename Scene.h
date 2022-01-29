@@ -21,7 +21,7 @@ public:
 
   ~Scene();
 public:
-  std::vector<int> wave_lengths_;
+  std::vector<int> wave_lengths_ = {400, 500, 600, 700}; // FIXME: удалить потом
 
 public:
 

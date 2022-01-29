@@ -9,8 +9,20 @@
 #include <cstdlib>
 #include <cmath>
 
-Camera::Camera(const Vec3f eye, const Vec3f center, const float fov, const int width, const int height, const Vec3f up):
-        eye(eye), center(center), fov(fov), WIDTH(width), HEIGHT(height), up(up) {
+int Camera::getWidth() const
+{
+  return WIDTH;
+}
+
+int Camera::getHeight() const
+{
+  return HEIGHT;
+}
+
+Camera::Camera(const Vec3f eye, const Vec3f center, const float fov,
+                  const int width, const int height, Color color,
+                  const Vec3f up):
+        eye(eye), center(center), fov(fov), WIDTH(width), HEIGHT(height), color(color),up(up) {
     /*
      * input: eye - место, где находится камера
      *        center - точка, которая будет находиться в центре кадра

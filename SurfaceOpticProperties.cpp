@@ -8,7 +8,7 @@ Kd::Kd(const Color& color, float coeff)
 {}
 
 Color Kd::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
-  return (E * color) * coeff / M_PI;
+  return (E * color) * coeff *(1/M_PI);
 }
 
 
@@ -152,10 +152,10 @@ Ray Kts::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionP
   float n1 = ray.envProp;
   float n2 = environmentProperty; // надо проверить
 
-  float cosinus = -max(-1.f, min(1.f, I * N));
+  float cosinus = -std::max(-1.f, std::min(1.f, I * N));
 
   if (cosinus < 0) { // луч выходит из объекта в воздух
-    cosinus = -max(-1.f, min(1.f, I * (-N)));
+    cosinus = -std::max(-1.f, std::min(1.f, I * (-N)));
     n2 = nAir;
   }
 
@@ -167,20 +167,21 @@ Ray Kts::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionP
   if (k < 0) {
     transformedRay.direction = Vec3f(1, 0, 0);
   } else {
-    transformedRay.direction = I * eta + N * (eta * cosi - sqrtf(k));
+    transformedRay.direction = I * eta + N * (eta * cosinus - sqrtf(k));
   }
 
   transformedRay.envProp = n2;
   transformedRay.origin = intersectionPoint;
   transformedRay.color = color * ray.color * coeff;
 
-  return transformedRay
+  return transformedRay;
 
 }
 
 
 const Color& Kts::getColor() const
-return color;
+{
+  return color;
 }
 
 

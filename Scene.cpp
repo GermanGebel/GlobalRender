@@ -94,72 +94,101 @@ void Scene::readGeometry(const std::string& fileName) {
   in.close();
 }
 
-
 void Scene::readMaterials(const std::string& fileName) {
   std::ifstream in(fileName);
 
   std::string line;
   int currentObjectId = -1;
-  double kd, ks, ktd, kts;
-  std::unordered_map<int, double> color;
+  float kd, ks, ktd, kts, brdf;
+
+  std::vector<float> colors;
+  std::vector<int> waveLengths;
+
   while (getline(in, line)) {
     if (line.find("id") != std::string::npos) {
       if (currentObjectId != -1) {
-        materials.push_back(std::make_shared<Material>(color, kd, ks));
-        color.clear();
+        Color color;
+        color.setWaveLengths(waveLengths);
+        color.setColors(colors);
+
+        materials_.push_back(new Material(color, kd, ks, ktd, kts, brdf));
+
+        waveLengths.clear();
+        colors.clear();
       }
       ++currentObjectId;
 
       getline(in, line);
       std::istringstream iss(line);
-      iss >> kd >> ks;
+      iss >> kd >> ks >> ktd >> kts >> brdf;
       continue;
     }
+
+    if (line == "") {
+      continue;
+    }
+
     std::istringstream iss(line);
     int waveLength;
     double col;
     iss >> waveLength >> col;
-    color[waveLength] = col;
+    waveLengths.push_back(waveLength);
+    colors.push_back(col);
   }
 
   in.close();
-
-  return materials;
 }
-
 
 void Scene::readLights(const std::string& fileName) {
   std::ifstream in(fileName);
-  vec3 origin;
-  //double intensity;
+  Vec3f origin;
+  Vec3f normal;
   std::vector<float> intensityTable;
-  Color color;
   std::unordered_map<int, double> kds;
   in >> origin.x >> origin.y >> origin.z;
-  in >> intensity;
+  in >> normal.x >> normal.y >> normal.z;
+
   std::string line;
   getline(in, line); // '\n'
+  getline(in, line);
+  std::istringstream iss(line);
+  std::string element;
+  while(std::getline(iss, element, ' ')) {
+    intensityTable.push_back(std::stof(element));
+  }
+
+  Color color;
+  std::vector<float> colors;
+
+
   while (getline(in, line)) {
     std::istringstream iss(line);
     int waveLength;
     double kd;
     iss >> waveLength >> kd;
-    kds[waveLength] = kd;
+    colors.push_back(kd);
+    color.waveLengths.push_back(waveLength);
   }
-  lights_.push_back(std::make_unique<PointLight>(origin, intensity, kds));
+
+  color.setColors(std::move(colors));
+
+  Light * light = new PointLight(color, intensityTable, origin, normal);
+  lights_.emplace_back(light);
   in.close();
 }
-
 
 void Scene::readCamera(const std::string& fileName) {
   std::ifstream in(fileName);
   Vec3f origin, target;
   int width, height;
-  std::unordered_map<int, double> color;
+  float fov;
   in >> origin.x >> origin.y >> origin.z;
   in >> target.x >> target.y >> target.z;
   in >> width >> height;
-  const float fov = 60;
-  camera_ = std::make_unique<Camera>(origin, target, fov, width, height);
+  in >> fov;
+  Color color;
+  color.waveLengths = wave_lengths_;
+  color.setColors(std::vector<float>(wave_lengths_.size(), 1.0f/wave_lengths_.size()));
+  camera_ = new Camera(origin, target, fov, width, height, color);
   in.close();
 }

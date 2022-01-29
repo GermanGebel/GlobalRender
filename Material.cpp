@@ -2,6 +2,24 @@
 
 #include <random>
 
+Material::~Material()
+{
+  delete kd;
+  delete ks;
+  delete ktd;
+  delete kts;
+  delete brdf;
+}
+
+Material::Material(Color& color, float kdCoeff, float ksCoeff,
+                   float ktdCoeff, float ktsCoeff, float brdfCoeff) {
+  this->kd = new Kd(color, kdCoeff);
+  this->ks = new Ks(color, ksCoeff);
+  this->ktd = new Ktd(color, ktdCoeff);
+  this->kts = new Kts(color, ktsCoeff);
+  this->brdf = new BRDF(color, brdfCoeff, 1);
+}
+
 Color Material::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
   return (kd == nullptr ? Color() : kd->CalculateLuminance(E, U, V, N)) +
   (ks == nullptr ? Color() : ks->CalculateLuminance(E, U, V, N)) +

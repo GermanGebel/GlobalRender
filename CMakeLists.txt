@@ -20,5 +20,11 @@ set(${PROJECT_NAME}_SOURCE_FILES
 #        Render.cpp
         Scene.h
         Scene.cpp
+        Material.h
+        Material.cpp
+        SurfaceOpticProperties.h
+        SurfaceOpticProperties.cpp
+        BRDF.h
+        BRDF.cpp
         )
 add_executable(main main.cpp ${${PROJECT_NAME}_SOURCE_FILES})
