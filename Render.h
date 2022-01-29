@@ -1,12 +1,12 @@
 #pragma once
-
+#include "Math.h"
 
 class Render {
 public:
 	void render(const std::string& outputFileName);
 private:
 	struct HitPoint {
-		vec3 point;
+		Vec3f point;
 		int triangleId;
 	};
 
@@ -14,6 +14,4 @@ private:
 	SpectralValues getLuminance(const Ray& ray);
 
 	static const int ANTIALIASING_FACTOR = 4;
-
-
 };

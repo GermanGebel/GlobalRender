@@ -1,12 +1,15 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <string>
 #include "structs.h"
 #include "Light.h"
 #include "Camera.h"
 #include "Geometry.h"
+#include "Material.h"
+
+#include <vector>
+#include <memory>
+#include <string>
+
 
 class Scene {
 public:
@@ -15,17 +18,21 @@ public:
                           const std::string& lightsFile,
                           const std::string& cameraFile);
 
-private:
 
-  void readGeometry(const std::string& fileName, const std::string& materialsFileName);
-  std::vector<std::shared_ptr<Material>> readMaterials(const std::string& fileName);
+  ~Scene();
+public:
+  std::vector<int> wave_lengths_;
+
+public:
+
+  void readGeometry(const std::string& fileName);
+  void readMaterials(const std::string& fileName);
   void readLights(const std::string& fileName);
   void readCamera(const std::string& fileName);
 
-  //std::vector<Triangle> triangles_; // class Mesh : public Geometry  std::vector<Triangle> triangles_
-
-  std::vector<Geometry> geometry_;
-  std::vector<std::unique_ptr<Light>> lights_; // seems OK..?
-  std::unique_ptr<Camera> camera_ = nullptr; //
+  std::vector<Geometry *> geometry_;
+  std::vector<Light *> lights_;
+  std::vector<Material *> materials_;
+  Camera * camera_ = nullptr; //
 
 };

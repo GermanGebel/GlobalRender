@@ -1,12 +1,13 @@
 #include "Scene.h"
+#include "Math.h"
+#include "Color.h"
+
 #include <fstream>
 #include <sstream>
 #include <limits>
 #include <iostream>
 #include <chrono>
-#include "Math.h"
-#include "Color.h"
-
+#include <unordered_map>
 
 enum GeometryParseState {
     INITIAL,
@@ -18,22 +19,37 @@ void Scene::readSceneFromFiles(const std::string& geometryFile,
     const std::string& materialsFile,
     const std::string& lightsFile,
     const std::string& cameraFile) {
-    readGeometry(geometryFile, materialsFile);
+    readGeometry(geometryFile);
+    readMaterials(materialsFile);
     readLights(lightsFile);
     readCamera(cameraFile);
 }
 
+  Scene::~Scene()
+  {
+    for (Geometry * geom : geometry_) {
+      delete geom;
+    }
 
-void Scene::readGeometry(const std::string& fileName, const std::string& materialsFileName) {
+    for (Light * light : lights_) {
+      delete light;
+    }
+
+    for (Material * material : materials_) {
+      delete material;
+    }
+
+    delete camera_;
+  }
+
+void Scene::readGeometry(const std::string& fileName) {
   std::ifstream in(fileName);
-
-  std::vector<std::shared_ptr<Material>> materials = readMaterials(materialsFileName);
 
   std::string line;
   GeometryParseState state = GeometryParseState::INITIAL;
-  int currentObjectId = 0;
   std::vector<Vec3f> vertices;
-  std::vector<Geometry> geometries;
+  std::vector<Triangle> triangles;
+  Mesh * mesh = nullptr;
 
   while (getline(in, line)) {
     switch (state) {
@@ -46,25 +62,30 @@ void Scene::readGeometry(const std::string& fileName, const std::string& materia
       case GeometryParseState::VERTICES: {
         if (line.find("triangles") != std::string::npos) {
           state = GeometryParseState::TRIANGLES;
+          mesh = new Mesh();
+          mesh->ownPoints_ = vertices;
           break;
         }
         std::istringstream iss(line);
         double x, y, z;
-        iss >> x >> z >> y;
-        vertices.push_back(Vec3f(x, y, z));
+        iss >> x >> z >> y; // FIXME: Это странно
+        vertices.emplace_back(x, y, z);
         break;
       }
       case GeometryParseState::TRIANGLES: {
         if (line.find("parts") != std::string::npos) {
           state = GeometryParseState::INITIAL;
+          mesh->triangles_ = std::move(triangles);
+          geometry_.emplace_back(mesh);
           vertices.clear();
-          ++currentObjectId;
+          triangles.clear();
           break;
         }
         std::istringstream iss(line);
         int v1, v2, v3;
         iss >> v1 >> v2 >> v3;
-        triangles_.push_back(Triangle(currentObjectId, vertices[v1], vertices[v2], vertices[v3], materials[currentObjectId]));
+
+        triangles.emplace_back(mesh, v1, v2, v3);
         break;
       }
     }
@@ -74,13 +95,12 @@ void Scene::readGeometry(const std::string& fileName, const std::string& materia
 }
 
 
-std::vector<std::shared_ptr<Material>> Scene::readMaterials(const std::string& fileName) {
+void Scene::readMaterials(const std::string& fileName) {
   std::ifstream in(fileName);
 
-  std::vector<std::shared_ptr<Material>> materials;
   std::string line;
   int currentObjectId = -1;
-  double kd, ks;
+  double kd, ks, ktd, kts;
   std::unordered_map<int, double> color;
   while (getline(in, line)) {
     if (line.find("id") != std::string::npos) {

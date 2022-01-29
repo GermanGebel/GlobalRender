@@ -26,6 +26,7 @@ public:
     virtual Vec3f getNormal(const Vec3f& intersectionPoint, const Vec3f& direction) const = 0;
     virtual bool hitTest(const Ray& ray, float& t) const = 0;
     virtual float getSurfaceArea() const = 0;
+    virtual ~Geometry() = default;
 
 public:
     int materialId_;
