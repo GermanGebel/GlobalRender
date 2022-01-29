@@ -6,6 +6,7 @@
 #include <vector>
 
 class Mesh;
+class Light;
 
 struct Triangle {
     Triangle(Mesh* mesh, int v1, int v2, int v3);
@@ -30,7 +31,7 @@ public:
 
 public:
     int materialId_;
-    // TODO sourceLight ?
+    Light *sourceLight_ = nullptr;
 };
 
 class Mesh : public Geometry {

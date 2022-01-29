@@ -16,8 +16,8 @@ set(${PROJECT_NAME}_SOURCE_FILES
         Ray.h
         Light.h
         Light.cpp
-#        Render.h
-#        Render.cpp
+        Render.h
+        Render.cpp
         Scene.h
         Scene.cpp
         Material.h

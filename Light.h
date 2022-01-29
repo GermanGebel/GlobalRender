@@ -9,9 +9,11 @@ class Light {
 public:
     Light(const Color& ks, std::vector<float> intensityTable, Vec3f normal, float flux = -1);
     Color getColor() const;
+    float getFlux() const;
     virtual ~Light()=default;
     virtual Ray   fireRay() = 0;
     virtual Vec3f getRandomPointOfSurf() = 0;
+    virtual float calculateIlluminance(const Vec3f & surfPoint, const Vec3f & surfNormal, const Vec3f & lightPoint) = 0;
 
 protected:
     std::vector<float>  calculateIntegral();
@@ -36,7 +38,7 @@ public:
                const Vec3f &origin, const Vec3f &normal, float flux = -1);
     Ray fireRay() override;
     Vec3f getRandomPointOfSurf() override;
-    float calculateIlluminance(const Vec3f & surfPoint, const Vec3f & surfNormal, const Vec3f & lightPoint);
+    float calculateIlluminance(const Vec3f & surfPoint, const Vec3f & surfNormal, const Vec3f & lightPoint) override;
 private:
     Vec3f origin_;
 };
@@ -48,7 +50,7 @@ public:
     float calculateLuminance(const Vec3f& rayDir) ;
     Vec3f getRandomPointOfSurf() override;
     Ray fireRay() override;
-    float calculateIlluminance(const Vec3f & surfPoint, const Vec3f & surfNormal, const Vec3f & lightPoint);
+    float calculateIlluminance(const Vec3f & surfPoint, const Vec3f & surfNormal, const Vec3f & lightPoint) override;
 
 private:
     std::vector<float> luminanceTable_;

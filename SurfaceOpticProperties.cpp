@@ -34,6 +34,7 @@ Ray Kd::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionPo
   transformedRay.origin = intersectionPoint;
   transformedRay.color = color * ray.color * coeff;
   transformedRay.trash.lastEvent = TransformRayEvent::e_KD;
+  transformedRay.color = transformedRay.color * ray.color.sum() / transformedRay.color.sum();
 
   return transformedRay;
 }
@@ -71,6 +72,7 @@ Ray Ks::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionPo
   transformedRay.origin = intersectionPoint;
   transformedRay.color = color * ray.color * coeff;
   transformedRay.trash.lastEvent = TransformRayEvent::e_KS;
+  transformedRay.color = transformedRay.color * ray.color.sum() / transformedRay.color.sum();
 
   return transformedRay;
 }
@@ -117,6 +119,7 @@ Ray Ktd::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionP
   transformedRay.direction = direction;
   transformedRay.origin = intersectionPoint;
   transformedRay.color = color * ray.color * coeff;
+  transformedRay.color = transformedRay.color * ray.color.sum() / transformedRay.color.sum();
   transformedRay.trash.lastEvent = TransformRayEvent::e_KTD;
 
   return transformedRay;
@@ -173,6 +176,7 @@ Ray Kts::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionP
   transformedRay.envProp = n2;
   transformedRay.origin = intersectionPoint;
   transformedRay.color = color * ray.color * coeff;
+  transformedRay.color = transformedRay.color * ray.color.sum() / transformedRay.color.sum();
 
   return transformedRay;
 

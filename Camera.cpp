@@ -78,6 +78,7 @@ Ray Camera::castRay(int X, int Y) {
     newRay.origin = eye;
     newRay.direction = direction;
     /////////////цвет////////////////////////
+    newRay.color = Color(1);
 
     return newRay;
 }

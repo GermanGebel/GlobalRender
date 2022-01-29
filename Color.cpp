@@ -19,6 +19,8 @@ void Color::setWaveLengths(const std::vector<int>& waves) {
 
 Color::Color() : colors(waveLengths.size(), 0) {};
 
+Color::Color(float value) : colors(waveLengths.size(), value) {}
+
 Color::Color(const std::vector<float>& colors) : colors(colors) {}
 
 void Color::setColors(const std::vector<float>& colors) {
@@ -41,15 +43,15 @@ Color Color::operator+(const Color& color) const {
     return result;
 }
 
-Color Color::operator+(float value) const {
-    Color result;
-
-    for (int i = 0; i < colors.size(); i++) {
-        result.colors[i] = colors[i] + value;
-    }
-
-    return result;
-}
+//Color Color::operator+(float value) const {
+//    Color result;
+//
+//    for (int i = 0; i < colors.size(); i++) {
+//        result.colors[i] = colors[i] + value;
+//    }
+//
+//    return result;
+//}
 
 Color Color::operator-(const Color& color) const {
     assert(this->colors.size() == color.colors.size());
@@ -64,15 +66,15 @@ Color Color::operator-(const Color& color) const {
 }
 
 
-Color Color::operator-(float value) const {
-    Color result;
-
-    for (int i = 0; i < colors.size(); i++) {
-      result.colors[i] = colors[i] - value;
-    }
-
-    return result;
-}
+//Color Color::operator-(float value) const {
+//    Color result;
+//
+//    for (int i = 0; i < colors.size(); i++) {
+//      result.colors[i] = colors[i] - value;
+//    }
+//
+//    return result;
+//}
 
 Color Color::operator*(const Color& color) const {
     assert(this->colors.size() == color.colors.size());
@@ -91,6 +93,28 @@ Color Color::operator*(float value) const {
 
     for (int i = 0; i < colors.size(); i++) {
       result.colors[i] = colors[i] * value;
+    }
+
+    return result;
+}
+
+Color Color::operator/(const Color& color) const {
+    assert(this->colors.size() == color.colors.size());
+
+    Color result;
+
+    for (int i = 0; i < colors.size(); i++) {
+      result.colors[i] = colors[i] / color.colors[i];
+    }
+
+    return result;
+}
+
+Color Color::operator/(float value) const {
+    Color result;
+
+    for (int i = 0; i < colors.size(); i++) {
+      result.colors[i] = colors[i] / value;
     }
 
     return result;
@@ -116,6 +140,15 @@ float& Color::operator[](const size_t i) {
 const float& Color::operator[](const size_t i) const {
     assert(i < colors.size());
     return colors[i];
+}
+
+
+float Color::sum() const {
+  float res = 0;
+  for (float x : colors) {
+    res += x;
+  }
+  return res;
 }
 
 //#include <iostream>

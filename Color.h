@@ -13,16 +13,21 @@ public:
     static void setWaveLengths(const std::vector<int>& waves);
 
     Color();
+    explicit Color(float value);
     Color(const std::vector<float>& colors);
     void setColors(const std::vector<float>& x);
     std::vector<float> getColors() const;
     Color operator+(const Color& color) const;
-    Color operator+(float value) const;
+//    Color operator+(float value) const;
     Color operator-(const Color& color) const;
-    Color operator-(float value) const;
+//    Color operator-(float value) const;
     Color operator*(const Color& color) const;
     Color operator*(float value) const;
+    Color operator/(const Color& color) const;
+    Color operator/(float value) const;
     float dot(const Color& color) const;
+
+    float sum() const;
 
     float &operator[](const size_t i);
     const float &operator[](const size_t i) const;

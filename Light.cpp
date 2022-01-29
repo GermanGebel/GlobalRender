@@ -64,6 +64,10 @@ Color Light::getColor() const {
     return ks_;
 }
 
+float Light::getFlux() const {
+  return flux_;
+}
+
 std::vector<float> Light::intensityTableExtension(std::vector<float> intensityTable) {
     // делаем tempTable копией intensityTable но с большей дискритизацией
     // это уменьшит ошибку для расчета общего потока и таблицы яркостей
@@ -186,6 +190,7 @@ RectangleLight::RectangleLight(const Color &ks,
                                const Vec3f &origin, const Vec3f &normal,
                                const Mesh &mesh, float flux) :
         Light(ks, intensityTable, normal, flux), geometryMesh_(mesh) {
+    geometryMesh_.sourceLight_ = this;
 
     normal_ = mesh.triangles_[0].getNormal(normal_);
 
