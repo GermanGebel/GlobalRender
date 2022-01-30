@@ -227,7 +227,7 @@ Color RectangleLight::calculateLuminance(const Vec3f &rayDir) {
     float angle = acos((rayDir * normal) / (rayDir.length() * normal.length())) * 180 / M_PI;              ///?????
     if (angle > 90) {                     //Если источник света развернут
         Color col = color_;
-        col.setColors(std::vector<float>(color_.getColors().size(), 0))
+        col.setColors(std::vector<float>(color_.getColors().size(), 0));
         return col;
     }
     float step = 90.0 / (luminanceTable_.size() - 1);             //step = 22.5, angle = 50
@@ -266,7 +266,7 @@ Color RectangleLight::calculateIlluminance(const Vec3f& surfPoint, const Vec3f& 
 
     if (angle > 90) {                     //Если источник света развернут
         Color col = color_;
-        col.setColors(std::vector<float>(color_.getColors().size(), 0))
+        col.setColors(std::vector<float>(color_.getColors().size(), 0));
         return col;
     }
     float step = 90.0 / (intensityTable_.size() - 1);

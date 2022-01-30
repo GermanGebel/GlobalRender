@@ -29,65 +29,66 @@ void Render::renderZBuffer(const std::string &outputFileName) {
 
   totalFlux = fluxes.back() + scene->lights_.back()->getFlux();
 
+  for (int phase = 0; phase < 10; ++phase) {
+    std::cout << "Phase #" << phase << std::endl;
+
 #pragma omp parallel for shared(height, width, outLuminance) default(none)
-  for (int i = 0; i < height; ++i) {
-    for (int j = 0; j < width; ++j) {
-      Ray ray = rays[i][j];  // TODO проверить индексы
+    for (int i = 0; i < height; ++i) {
+      for (int j = 0; j < width; ++j) {
+        Ray ray = rays[i][j];  // TODO проверить индексы
 
-      int depth;
-      for (depth = 1; depth <= MAX_RENDER_DEPTH; ++depth) {
-        float t = std::numeric_limits<float>().max();
-        Geometry* hittedGeometry = getIntersection(ray, t);
+        Geometry* hittedGeometry = nullptr;
+        int depth;
+        for (depth = 1; depth <= MAX_RENDER_DEPTH; ++depth) {
+          float t = std::numeric_limits<float>().max();
+          // передаем предыдущую hittedGeometry, чтобы исключить повторные пересечения с ней
+          hittedGeometry = getIntersection(ray, t, hittedGeometry);
 
-        if (hittedGeometry == nullptr) { // Нет пересечений
-          break;
-        }
-
-        if (hittedGeometry->sourceLight_) { // Попали в источник света
-          // Попали после отражения или преломления
-          // TODO первый луч
-          if (ray.trash.lastEvent == TransformRayEvent::e_KS || ray.trash.lastEvent == TransformRayEvent::e_KTS) {
-            // TODO уточнить про параметр rayDir
-            outLuminance[i][j] = outLuminance[i][j] + ((RectangleLight*)hittedGeometry->sourceLight_)->calculateLuminance(ray.direction);
+          if (hittedGeometry == nullptr) { // Нет пересечений
+            break;
           }
 
-//          ray = hittedGeometry->sourceLight_->fireRay();
-//          ++depth; // TODO надо ли учитывать источник света при делении яркости
-//          continue;
+          if (hittedGeometry->sourceLight_) { // Попали в источник света
+            // Попали после отражения или преломления
+            // TODO первый луч
+            if (ray.trash.lastEvent == TransformRayEvent::e_KS || ray.trash.lastEvent == TransformRayEvent::e_KTS) {
+              outLuminance[i][j] = outLuminance[i][j] +
+                                   ((RectangleLight*) hittedGeometry->sourceLight_)->calculateLuminance(ray.direction);
+            }
+          }
+
+          Vec3f intersectionPoint = ray.origin + ray.direction * t;
+          Vec3f N = hittedGeometry->getNormal(intersectionPoint, -ray.direction).normalize();
+          Material* material = scene->materials_[hittedGeometry->materialId_];
+
+          // Считаем освещенность
+          Light* light = chooseLight();
+          Vec3f lightPoint = light->getRandomPointOfSurf();
+          // Проверяем есть ли препятствия
+          Ray lightRay(lightPoint, (intersectionPoint - lightPoint).normalize());
+          t = (intersectionPoint - lightPoint).length();
+          Ray lightRayFake(lightRay.origin + lightRay.direction, lightRay.direction);
+          Geometry* shadowGeometry = getIntersection(lightRayFake, t, hittedGeometry);
+          Color illuminance =
+              shadowGeometry == nullptr ? light->calculateIlluminance(intersectionPoint, N, lightPoint) : Color();
+
+          // Считаем яркость
+          outLuminance[i][j] =
+              outLuminance[i][j] + material->CalculateLuminance(illuminance, ray.direction, lightRay.direction, N);
+          SurfaceOpticProperty* surfaceOpticProperty = material->chooseEvent(ray);
+          if (surfaceOpticProperty == nullptr) { // луч поглотился
+            break;
+          }
+
+          ray = surfaceOpticProperty->TransformRay(ray, N, intersectionPoint);
+
+          if (ray.trash.lastEvent == TransformRayEvent::e_KILL) {
+            break;
+          }
         }
 
-        Vec3f intersectionPoint = ray.origin + ray.direction * t;
-        Vec3f N = hittedGeometry->getNormal(intersectionPoint, -ray.direction).normalize();
-        Material *material = scene->materials_[hittedGeometry->materialId_];
-
-        // Считаем освещенность
-        Light *light = chooseLight();
-        Vec3f lightPoint = light->getRandomPointOfSurf();
-        // Проверяем есть ли препятствия
-        Ray lightRay(lightPoint, intersectionPoint - lightPoint);
-        // TODO подобрать eps в зависимости от размеров сцены
-        t = (intersectionPoint - lightPoint).length() - 2e-4;
-        Ray lightRayFake = lightRay;
-        lightRayFake.origin = lightRayFake.origin + lightRayFake.direction * 1e-4;
-        float illuminance = getIntersection(lightRayFake, t) == nullptr ? light->calculateIlluminance(intersectionPoint, N, lightPoint) : 0;
-
-        // Считаем яркость
-        Color E(illuminance); // TODO освещенность должна быть спектральной?
-        outLuminance[i][j] = outLuminance[i][j] + material->CalculateLuminance(E, ray.direction, lightRay.direction, N);
-        SurfaceOpticProperty *surfaceOpticProperty = material->chooseEvent(ray);
-        if (surfaceOpticProperty == nullptr) { // луч поглотился
-          break;
-        }
-
-        // TODO сместить начало луча
-        ray = surfaceOpticProperty->TransformRay(ray, N, intersectionPoint);
-
-        if (ray.trash.lastEvent == TransformRayEvent::e_KILL) {
-          break;
-        }
+        outLuminance[i][j] = outLuminance[i][j] / depth;
       }
-
-      outLuminance[i][j] = outLuminance[i][j] / depth;
     }
   }
 
@@ -113,8 +114,7 @@ void Render::renderZBuffer(const std::string &outputFileName) {
 
   std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
   std::cout << "Rendering time = " <<
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                    end - begin).count() / 1000.0 << "s" << std::endl;
+            std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "s" << std::endl;
 
   std::ofstream out(outputFileName);
 
@@ -133,11 +133,11 @@ void Render::renderZBuffer(const std::string &outputFileName) {
 }
 
 
-Geometry* Render::getIntersection(const Ray& ray, float& t) const {
+Geometry* Render::getIntersection(const Ray& ray, float& t, Geometry *exclude) const {
   t = std::numeric_limits<float>().max();
   Geometry* hitted = nullptr;
   for (const auto& geometry : scene->geometry_) {
-    if (geometry->hitTest(ray, t)) {
+    if (geometry != exclude && geometry->hitTest(ray, t)) {
       hitted = geometry;
     }
   }

@@ -15,7 +15,7 @@ private:
 	};
 
 private:
-  Geometry* getIntersection(const Ray& ray, float& t) const;
+  Geometry* getIntersection(const Ray& ray, float& t, Geometry *exclude = nullptr) const;
   Light* chooseLight() const;
 
 private:
