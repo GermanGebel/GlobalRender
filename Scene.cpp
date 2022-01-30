@@ -130,10 +130,10 @@ void Scene::readMaterials(const std::string& fileName) {
 
     std::istringstream iss(line);
     int waveLength;
-    double col;
-    iss >> waveLength >> col;
+    float color;
+    iss >> waveLength >> color;
     waveLengths.push_back(waveLength);
-    colors.push_back(col);
+    colors.push_back(color);
   }
 
   in.close();
