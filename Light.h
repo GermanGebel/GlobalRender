@@ -13,7 +13,7 @@ public:
     virtual ~Light()=default;
     virtual Ray   fireRay() = 0;
     virtual Vec3f getRandomPointOfSurf() = 0;
-    virtual float calculateIlluminance(const Vec3f & surfPoint, const Vec3f & surfNormal, const Vec3f & lightPoint) = 0;
+    virtual Color calculateIlluminance(const Vec3f & surfPoint, const Vec3f & surfNormal, const Vec3f & lightPoint) = 0;
 
 protected:
     std::vector<float>  calculateIntegral();
@@ -27,9 +27,9 @@ protected:
     float flux_;
     Vec3f normal_;
     std::vector<float> intensityTable_;
-    Color ks_;
-    std::vector<float> tabularProbabilities;
-    std::vector<Vec3f> rotationMatrix;
+    Color color_;
+    std::vector<float> tabularProbabilities_;
+    std::vector<Vec3f> rotationMatrix_;
 };
 
 class PointLight : public Light {
@@ -38,7 +38,7 @@ public:
                const Vec3f &origin, const Vec3f &normal, float flux = -1);
     Ray fireRay() override;
     Vec3f getRandomPointOfSurf() override;
-    float calculateIlluminance(const Vec3f & surfPoint, const Vec3f & surfNormal, const Vec3f & lightPoint) override;
+    Color calculateIlluminance(const Vec3f & surfPoint, const Vec3f & surfNormal, const Vec3f & lightPoint) override;
 private:
     Vec3f origin_;
 };
@@ -47,10 +47,10 @@ class RectangleLight : public Light {
 public:
     RectangleLight(const Color& ks, const std::vector<float> &intensityTable,
                    const Vec3f &origin, const Vec3f &normal, const Mesh &mesh, float flux = -1);
-    float calculateLuminance(const Vec3f& rayDir) ;
+    Color calculateLuminance(const Vec3f& rayDir) ;
     Vec3f getRandomPointOfSurf() override;
     Ray fireRay() override;
-    float calculateIlluminance(const Vec3f & surfPoint, const Vec3f & surfNormal, const Vec3f & lightPoint) override;
+    Color calculateIlluminance(const Vec3f & surfPoint, const Vec3f & surfNormal, const Vec3f & lightPoint) override;
 
 private:
     std::vector<float> luminanceTable_;

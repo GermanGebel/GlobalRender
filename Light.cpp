@@ -44,12 +44,13 @@ bool Light::rejectionSampling(double leftProbability, double rightProbability, d
 // =============================================================================
 
 Light::Light(const Color &ks, std::vector<float> intensityTable, Vec3f normal, float flux) :
-        flux_(flux), intensityTable_(intensityTableExtension(intensityTable)), ks_(ks), normal_(normal.normalize()) {
+        flux_(flux), intensityTable_(intensityTableExtension(intensityTable)), color_(ks), normal_(normal.normalize()) {
 
-    // Вычисляем интеграл по tempTable
-    // это потом источника света
-    tabularProbabilities = calculateIntegral();
-    float calculated_flux = tabularProbabilities.back() * 2 * M_PI;
+    // intensityTable_ расчирина до ≈ 90 значений
+    // интеграл траблицы ≈ потоку (flux)
+
+    tabularProbabilities_ = calculateIntegral();
+    float calculated_flux = tabularProbabilities_.back() * 2 * M_PI;
     if (flux_ == -1) {
         flux_ = calculated_flux;
     } else {
@@ -61,7 +62,7 @@ Light::Light(const Color &ks, std::vector<float> intensityTable, Vec3f normal, f
 }
 
 Color Light::getColor() const {
-    return ks_;
+    return color_;
 }
 
 float Light::getFlux() const {
@@ -69,8 +70,10 @@ float Light::getFlux() const {
 }
 
 std::vector<float> Light::intensityTableExtension(std::vector<float> intensityTable) {
-    // делаем tempTable копией intensityTable но с большей дискритизацией
+    // Увеличивает дискритизацию входных параметров ≈ 90 значений
     // это уменьшит ошибку для расчета общего потока и таблицы яркостей
+    // расстояние между соседними значениями одинаково
+
     std::vector<float> tempTable;
     if (intensityTable.size() == 1) {
         for (int i = 0; i < 90; i++) {
@@ -112,17 +115,17 @@ Vec3f Light::getDir() {
     float phi = rand() % 360;
     float theta = 0.;
 
-    float randIntens = static_cast<float>(rand()) / (static_cast <float> (RAND_MAX/tabularProbabilities.back()));
-    int leftPos = binarySearch(tabularProbabilities, randIntens);
+    float randIntens = static_cast<float>(rand()) / (static_cast <float> (RAND_MAX / tabularProbabilities_.back()));
+    int leftPos = binarySearch(tabularProbabilities_, randIntens);
 
     bool isRejected = true;
-    float widht = 90.0 / (tabularProbabilities.size() - 1);
+    float widht = 90.0 / (tabularProbabilities_.size() - 1);
     while (isRejected) {
         // Random theta angle from the local range with uniform probability distribution
         theta = randomFromRange(widht*(leftPos+1), widht * leftPos);
 
         // Rejection sampling
-        isRejected = rejectionSampling(tabularProbabilities[leftPos], tabularProbabilities[leftPos+1], theta, widht * leftPos, widht * (leftPos+1));
+        isRejected = rejectionSampling(tabularProbabilities_[leftPos], tabularProbabilities_[leftPos + 1], theta, widht * leftPos, widht * (leftPos + 1));
     }
 
     phi = phi * M_PI / 180;
@@ -133,9 +136,9 @@ Vec3f Light::getDir() {
 
     Vec3f dir{x, y, z};
     Vec3f result;
-    result.x = rotationMatrix[0].x * dir.x + rotationMatrix[0].y * dir.y + rotationMatrix[0].z * dir.z;
-    result.y = rotationMatrix[1].x * dir.x + rotationMatrix[1].y * dir.y + rotationMatrix[1].z * dir.z;
-    result.z = rotationMatrix[2].x * dir.x + rotationMatrix[2].y * dir.y + rotationMatrix[2].z * dir.z;
+    result.x = rotationMatrix_[0].x * dir.x + rotationMatrix_[0].y * dir.y + rotationMatrix_[0].z * dir.z;
+    result.y = rotationMatrix_[1].x * dir.x + rotationMatrix_[1].y * dir.y + rotationMatrix_[1].z * dir.z;
+    result.z = rotationMatrix_[2].x * dir.x + rotationMatrix_[2].y * dir.y + rotationMatrix_[2].z * dir.z;
 
     return result;
 }
@@ -148,7 +151,7 @@ PointLight::PointLight(const Color &ks,
                        const std::vector<float> &intensityTable,
                        const Vec3f &origin, const Vec3f &normal, float flux) :
         Light(ks, intensityTable, normal, flux), origin_(origin) {
-    rotationMatrix = getRotationMatrix(Vec3f(0, 0, 1), normal_);
+    rotationMatrix_ = getRotationMatrix(Vec3f(0, 0, 1), normal_);
 }
 
 Vec3f PointLight::getRandomPointOfSurf(){
@@ -157,13 +160,13 @@ Vec3f PointLight::getRandomPointOfSurf(){
 
 Ray PointLight::fireRay() {
     Ray newRay;
-    newRay.color = ks_;
+    newRay.color = color_;
     newRay.direction = getDir();
     newRay.origin = origin_;
     return newRay;
 }
 
-float PointLight::calculateIlluminance(const Vec3f& surfPoint, const Vec3f& surfNormal,const Vec3f& lightPoint) {
+Color PointLight::calculateIlluminance(const Vec3f& surfPoint, const Vec3f& surfNormal,const Vec3f& lightPoint) {
 
     // Расчер освещенност (есть точка источнка, и как он освещает какую-то точку в пространсве
     // E = I/(r*r) * cos(alpha)
@@ -178,7 +181,15 @@ float PointLight::calculateIlluminance(const Vec3f& surfPoint, const Vec3f& surf
     float illuminance = intensityTable_[leftPosLumTable] + ((intensityTable_[leftPosLumTable + 1] -
                                                              intensityTable_[leftPosLumTable]) / step) * (angle - leftPosLumTable * step);                   //Интерполяция по таблице
 
-    return illuminance * cos(angle * M_PI / 180)/ (distanse * distanse );
+    illuminance = illuminance * cos(angle * M_PI / 180)/ (distanse * distanse );
+    std::vector<float> tempCol = color_.getColors();
+    for(int i = 0; i < tempCol.size(); i++){
+        tempCol[i] *= illuminance;
+    }
+    Color col = color_;
+    col.setColors(tempCol);
+    return col;
+
 }
 
 // =============================================================================
@@ -202,21 +213,23 @@ RectangleLight::RectangleLight(const Color &ks,
     luminanceTable_.push_back(intensityTable_[intensityTable_.size() - 1] /
                               (dS * cos(89.0 * M_PI / 180.0)));
 
-    rotationMatrix = getRotationMatrix(Vec3f(0, 0, 1),normal_);
+    rotationMatrix_ = getRotationMatrix(Vec3f(0, 0, 1), normal_);
 }
 
 Vec3f RectangleLight::getRandomPointOfSurf(){
     return geometryMesh_.randomSurfPoint();
 };
 
-float RectangleLight::calculateLuminance(const Vec3f &rayDir) {
+Color RectangleLight::calculateLuminance(const Vec3f &rayDir) {
     Vec3f normal = normal_;
     // Луч гулял по сцене и попал на источник света. Надо узнать испускаемую яркость в данном направлении
     normal = Vec3f(-normal.x, -normal.y, -normal.z);
     float angle = acos((rayDir * normal) / (rayDir.length() * normal.length())) * 180 / M_PI;              ///?????
-    if (angle >= 90)
-        return 0;
-
+    if (angle > 90) {                     //Если источник света развернут
+        Color col = color_;
+        col.setColors(std::vector<float>(color_.getColors().size(), 0))
+        return col;
+    }
     float step = 90.0 / (luminanceTable_.size() - 1);             //step = 22.5, angle = 50
 
     int leftPosLumTable = angle / step;
@@ -224,18 +237,25 @@ float RectangleLight::calculateLuminance(const Vec3f &rayDir) {
                       ((luminanceTable_[leftPosLumTable + 1] -
                         luminanceTable_[leftPosLumTable]) / step) *
                       (angle - leftPosLumTable * step);
-    return luminance;
+    std::vector<float> tempCol = color_.getColors();
+    for(int i = 0; i < tempCol.size(); i++){
+        tempCol[i] *= luminance;
+    }
+    Color col = color_;
+    col.setColors(tempCol);
+    return col;
+
 }
 
 Ray RectangleLight::fireRay() {
     Ray newRay;
-    newRay.color = ks_;
+    newRay.color = color_;
     newRay.direction = getDir();
     newRay.origin = geometryMesh_.randomSurfPoint() +normal_ * 0.00001;
     return newRay;
 }
 
-float RectangleLight::calculateIlluminance(const Vec3f& surfPoint, const Vec3f& surfNormal,const Vec3f& lightPoint) {
+Color RectangleLight::calculateIlluminance(const Vec3f& surfPoint, const Vec3f& surfNormal,const Vec3f& lightPoint) {
 
     // Расчер освещенност (есть точка источнка, и как он освещает какую-то точку в пространсве
     // E = I/(r*r) * cos(alpha)
@@ -244,13 +264,23 @@ float RectangleLight::calculateIlluminance(const Vec3f& surfPoint, const Vec3f& 
     float distanse = direRay.length();
     float angle = acos((direRay * surfNormal) / distanse) * 180 / M_PI;
 
-    if (angle > 90)                     //Если источник света развернут
-        return 0;
+    if (angle > 90) {                     //Если источник света развернут
+        Color col = color_;
+        col.setColors(std::vector<float>(color_.getColors().size(), 0))
+        return col;
+    }
     float step = 90.0 / (intensityTable_.size() - 1);
 
     int leftPosLumTable = angle / step;
     float illuminance = intensityTable_[leftPosLumTable] + ((intensityTable_[leftPosLumTable + 1] -
                                                              intensityTable_[leftPosLumTable]) / step) * (angle - leftPosLumTable * step);                   //Интерполяция по таблице
 
-    return illuminance * cos(angle * M_PI / 180)/ (distanse * distanse );
+    illuminance = illuminance * cos(angle * M_PI / 180)/ (distanse * distanse );
+    std::vector<float> tempCol = color_.getColors();
+    for(int i = 0; i < tempCol.size(); i++){
+        tempCol[i] *= illuminance;
+    }
+    Color col = color_;
+    col.setColors(tempCol);
+    return col;
 }
