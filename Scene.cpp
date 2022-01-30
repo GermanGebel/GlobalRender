@@ -50,6 +50,7 @@ void Scene::readGeometry(const std::string& fileName) {
   std::vector<Vec3f> vertices;
   std::vector<Triangle> triangles;
   Mesh * mesh = nullptr;
+  int matrialID = 0;
 
   while (getline(in, line)) {
     switch (state) {
@@ -77,6 +78,7 @@ void Scene::readGeometry(const std::string& fileName) {
           state = GeometryParseState::INITIAL;
           mesh->triangles_ = std::move(triangles);
           geometry_.emplace_back(mesh);
+          geometry_.back()->materialId_ = matrialID++;
           vertices.clear();
           triangles.clear();
           break;
@@ -108,7 +110,6 @@ void Scene::readMaterials(const std::string& fileName) {
     if (line.find("id") != std::string::npos) {
       if (currentObjectId != -1) {
         Color color;
-        color.setWaveLengths(waveLengths);
         color.setColors(colors);
 
         materials_.push_back(new Material(color, kd, ks, ktd, kts, brdf));
@@ -135,6 +136,7 @@ void Scene::readMaterials(const std::string& fileName) {
     waveLengths.push_back(waveLength);
     colors.push_back(color);
   }
+
 
   in.close();
 }
@@ -167,7 +169,6 @@ void Scene::readLights(const std::string& fileName) {
     double kd;
     iss >> waveLength >> kd;
     colors.push_back(kd);
-    color.waveLengths.push_back(waveLength);
   }
 
   color.setColors(std::move(colors));

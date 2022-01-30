@@ -22,14 +22,14 @@ void Render::renderZBuffer(const std::string &outputFileName) {
   std::vector<std::vector<Ray>> rays = scene->camera_->render();
 
   fluxes.resize(scene->lights_.size());
-  fluxes[0] = scene->lights_[0]->getFlux();
+  fluxes[0] = 0;
   for (int i = 1; i < scene->lights_.size(); ++i) {
     fluxes[i] = fluxes[i - 1] + scene->lights_[i - 1]->getFlux();
   }
 
   totalFlux = fluxes.back() + scene->lights_.back()->getFlux();
 
-  for (int phase = 0; phase < 10; ++phase) {
+  for (int phase = 0; phase < 1; ++phase) {
     std::cout << "Phase #" << phase << std::endl;
 
 #pragma omp parallel for shared(height, width, outLuminance) default(none)
@@ -69,13 +69,16 @@ void Render::renderZBuffer(const std::string &outputFileName) {
           t = (intersectionPoint - lightPoint).length();
           Ray lightRayFake(lightRay.origin + lightRay.direction, lightRay.direction);
           Geometry* shadowGeometry = getIntersection(lightRayFake, t, hittedGeometry);
-          Color illuminance =
-              shadowGeometry == nullptr ? light->calculateIlluminance(intersectionPoint, N, lightPoint) : Color();
+
+
+          Color illuminance = shadowGeometry == nullptr ? light->calculateIlluminance(intersectionPoint, N, lightPoint) : Color();
 
           // Считаем яркость
           outLuminance[i][j] =
               outLuminance[i][j] + material->CalculateLuminance(illuminance, ray.direction, lightRay.direction, N);
+
           SurfaceOpticProperty* surfaceOpticProperty = material->chooseEvent(ray);
+
           if (surfaceOpticProperty == nullptr) { // луч поглотился
             break;
           }

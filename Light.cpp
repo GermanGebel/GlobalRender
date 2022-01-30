@@ -5,6 +5,7 @@
 #include <vector>
 #include <time.h>
 #include <random>
+#include <iostream>
 
 #include "Light.h"
 
@@ -171,24 +172,23 @@ Color PointLight::calculateIlluminance(const Vec3f& surfPoint, const Vec3f& surf
     // Расчер освещенност (есть точка источнка, и как он освещает какую-то точку в пространсве
     // E = I/(r*r) * cos(alpha)
 
-    Vec3f direRay = surfPoint - lightPoint;
+    Vec3f direRay = lightPoint - surfPoint;
     float distanse = direRay.length();
     float angle = acos((direRay * surfNormal) / distanse) * 180 / M_PI;
+    if (angle > 90)
+        angle = 180 - angle;
 
-    float step = 90.0 / (intensityTable_.size() - 1);
+    float step = 180.0 / (intensityTable_.size() - 1);
 
     int leftPosLumTable = angle / step;
+
+
     float illuminance = intensityTable_[leftPosLumTable] + ((intensityTable_[leftPosLumTable + 1] -
                                                              intensityTable_[leftPosLumTable]) / step) * (angle - leftPosLumTable * step);                   //Интерполяция по таблице
 
     illuminance = illuminance * cos(angle * M_PI / 180)/ (distanse * distanse );
-    std::vector<float> tempCol = color_.getColors();
-    for(int i = 0; i < tempCol.size(); i++){
-        tempCol[i] *= illuminance;
-    }
-    Color col = color_;
-    col.setColors(tempCol);
-    return col;
+
+    return color_ * illuminance;
 
 }
 
