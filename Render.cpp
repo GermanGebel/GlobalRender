@@ -4,6 +4,8 @@
 #include <fstream>
 #include <random>
 
+const float Render::EPS = 1e-2;
+
 Render::Render(Scene * scene_) : scene(scene_)
 {
 
@@ -29,20 +31,21 @@ void Render::renderZBuffer(const std::string &outputFileName) {
 
   totalFlux = fluxes.back() + scene->lights_.back()->getFlux();
 
-  for (int phase = 0; phase < 1; ++phase) {
+  for (int phase = 0; phase < PHASES; ++phase) {
     std::cout << "Phase #" << phase << std::endl;
 
-#pragma omp parallel for shared(height, width, outLuminance) default(none)
+#pragma omp parallel for shared(height, width, outLuminance, rays) default(none)
     for (int i = 0; i < height; ++i) {
       for (int j = 0; j < width; ++j) {
         Ray ray = rays[i][j];  // TODO проверить индексы
 
-        Geometry* hittedGeometry = nullptr;
         int depth;
+        Color currentPhaseLuminance;
         for (depth = 1; depth <= MAX_RENDER_DEPTH; ++depth) {
           float t = std::numeric_limits<float>().max();
+          Vec3f N;
           // передаем предыдущую hittedGeometry, чтобы исключить повторные пересечения с ней
-          hittedGeometry = getIntersection(ray, t, hittedGeometry);
+          Geometry* hittedGeometry = getIntersection(ray, t, N);
 
           if (hittedGeometry == nullptr) { // Нет пересечений
             break;
@@ -52,30 +55,31 @@ void Render::renderZBuffer(const std::string &outputFileName) {
             // Попали после отражения или преломления
             // TODO первый луч
             if (ray.trash.lastEvent == TransformRayEvent::e_KS || ray.trash.lastEvent == TransformRayEvent::e_KTS) {
-              outLuminance[i][j] = outLuminance[i][j] +
+              currentPhaseLuminance = currentPhaseLuminance +
                                    ((RectangleLight*) hittedGeometry->sourceLight_)->calculateLuminance(ray.direction);
             }
           }
 
           Vec3f intersectionPoint = ray.origin + ray.direction * t;
-          Vec3f N = hittedGeometry->getNormal(intersectionPoint, -ray.direction).normalize();
           Material* material = scene->materials_[hittedGeometry->materialId_];
 
           // Считаем освещенность
           Light* light = chooseLight();
           Vec3f lightPoint = light->getRandomPointOfSurf();
           // Проверяем есть ли препятствия
-          Ray lightRay(lightPoint, (intersectionPoint - lightPoint).normalize());
-          t = (intersectionPoint - lightPoint).length();
-          Ray lightRayFake(lightRay.origin + lightRay.direction, lightRay.direction);
-          Geometry* shadowGeometry = getIntersection(lightRayFake, t, hittedGeometry);
+          Ray lightRay(intersectionPoint, (lightPoint - intersectionPoint).normalize());
+          t = (lightPoint - intersectionPoint).length() - 2 * EPS;
+          Ray lightRayFake(lightRay.origin + lightRay.direction * EPS, lightRay.direction);
+          Vec3f dummy;
+          Geometry* shadowGeometry = getIntersection(lightRayFake, t, dummy);
 
 
           Color illuminance = shadowGeometry == nullptr ? light->calculateIlluminance(intersectionPoint, N, lightPoint) : Color();
+          illuminance = illuminance * totalFlux / light->getFlux();
 
           // Считаем яркость
-          outLuminance[i][j] =
-              outLuminance[i][j] + material->CalculateLuminance(illuminance, ray.direction, lightRay.direction, N);
+          currentPhaseLuminance =
+              currentPhaseLuminance + material->CalculateLuminance(illuminance, ray.direction, lightRay.direction, N);
 
           SurfaceOpticProperty* surfaceOpticProperty = material->chooseEvent(ray);
 
@@ -84,13 +88,14 @@ void Render::renderZBuffer(const std::string &outputFileName) {
           }
 
           ray = surfaceOpticProperty->TransformRay(ray, N, intersectionPoint);
+          ray.origin = ray.origin + ray.direction * EPS;
 
           if (ray.trash.lastEvent == TransformRayEvent::e_KILL) {
             break;
           }
         }
 
-        outLuminance[i][j] = outLuminance[i][j] / depth;
+        outLuminance[i][j] = outLuminance[i][j] + currentPhaseLuminance / depth;
       }
     }
   }
@@ -125,7 +130,7 @@ void Render::renderZBuffer(const std::string &outputFileName) {
     out << "wave_length " << Color::waveLengths[waveLengthIter] << std::endl;
     for (int i = 0; i < height; ++i) {
       for (int j = 0; j < width; ++j) {
-        out << outLuminance[i][j][waveLengthIter] << " ";
+        out << outLuminance[i][j][waveLengthIter] / PHASES << " ";
       }
       out << std::endl;
     }
@@ -136,11 +141,10 @@ void Render::renderZBuffer(const std::string &outputFileName) {
 }
 
 
-Geometry* Render::getIntersection(const Ray& ray, float& t, Geometry *exclude) const {
-  t = std::numeric_limits<float>().max();
+Geometry* Render::getIntersection(const Ray& ray, float& t, Vec3f& N) const {
   Geometry* hitted = nullptr;
   for (const auto& geometry : scene->geometry_) {
-    if (geometry != exclude && geometry->hitTest(ray, t)) {
+    if (geometry->hitTest(ray, t, N)) {
       hitted = geometry;
     }
   }

@@ -237,13 +237,7 @@ Color RectangleLight::calculateLuminance(const Vec3f &rayDir) {
                       ((luminanceTable_[leftPosLumTable + 1] -
                         luminanceTable_[leftPosLumTable]) / step) *
                       (angle - leftPosLumTable * step);
-    std::vector<float> tempCol = color_.getColors();
-    for(int i = 0; i < tempCol.size(); i++){
-        tempCol[i] *= luminance;
-    }
-    Color col = color_;
-    col.setColors(tempCol);
-    return col;
+    return color_ * luminance;
 
 }
 
@@ -276,11 +270,5 @@ Color RectangleLight::calculateIlluminance(const Vec3f& surfPoint, const Vec3f& 
                                                              intensityTable_[leftPosLumTable]) / step) * (angle - leftPosLumTable * step);                   //Интерполяция по таблице
 
     illuminance = illuminance * cos(angle * M_PI / 180)/ (distanse * distanse );
-    std::vector<float> tempCol = color_.getColors();
-    for(int i = 0; i < tempCol.size(); i++){
-        tempCol[i] *= illuminance;
-    }
-    Color col = color_;
-    col.setColors(tempCol);
-    return col;
+    return color_ * illuminance;
 }

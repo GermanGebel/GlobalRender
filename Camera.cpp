@@ -67,7 +67,7 @@ Ray Camera::castRay(int X, int Y) {
     float h = float(HEIGHT) / 2.0 - 0.5;
     float w = float(WIDTH) / 2.0 - 0.5;
 
-    Vec3f direction{float(-w + displacedX), float(h - displacedY), dist};
+    Vec3f direction{float(w - displacedX), float(h - displacedY), dist};
 
     direction = Vec3f {matrixOfRotation[0].x * direction.x  + matrixOfRotation[0].y * direction.y + matrixOfRotation[0].z * direction.z,
                        matrixOfRotation[1].x * direction.x  + matrixOfRotation[1].y * direction.y + matrixOfRotation[1].z * direction.z,
@@ -78,7 +78,7 @@ Ray Camera::castRay(int X, int Y) {
     newRay.origin = eye;
     newRay.direction = direction;
     /////////////цвет////////////////////////
-    newRay.color = Color(1);
+    newRay.color = Color(1.0 / Color::waveLengths.size());
 
     return newRay;
 }

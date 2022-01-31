@@ -15,12 +15,14 @@ private:
 	};
 
 private:
-  Geometry* getIntersection(const Ray& ray, float& t, Geometry *exclude = nullptr) const;
+  Geometry* getIntersection(const Ray& ray, float& t, Vec3f& N) const;
   Light* chooseLight() const;
 
 private:
 	static const int ANTIALIASING_FACTOR = 4;
 	static const int MAX_RENDER_DEPTH = 1000;
+	static const int PHASES = 10;
+	static const float EPS;
 
 	float totalFlux = 0;
 	std::vector<float> fluxes;

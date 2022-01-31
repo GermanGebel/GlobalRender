@@ -10,7 +10,7 @@ Triangle::Triangle(Mesh* mesh, int v1, int v2, int v3)
 {}
 
 
-bool Triangle::hitTest(const Ray& ray, float& t) const {
+bool Triangle::hitTest(const Ray& ray, float& t, Vec3f& N) const {
     Vec3f e1 = mesh->ownPoints_[v2] - mesh->ownPoints_[v1];
     Vec3f e2 = mesh->ownPoints_[v3] - mesh->ownPoints_[v1];
     Vec3f pvec = cross(ray.direction, e2);
@@ -30,6 +30,7 @@ bool Triangle::hitTest(const Ray& ray, float& t) const {
     float dist = (e2 * qvec) * inv_det;
     if (dist < t && dist > 1e-8) {
         t = dist;
+        N = getNormal(-ray.direction);
         return true;
     }
     return false;
@@ -86,21 +87,11 @@ Vec3f Triangle::randomSurfPoint() const {
 }
 
 
-Vec3f Mesh::getNormal(const Vec3f& intersectionPoint, const Vec3f& direction) const {
-    for (const auto& triangle : triangles_) {
-        if (triangle.isInside(intersectionPoint))
-            return triangle.getNormal(direction);
-    }
-
-    return triangles_[0].getNormal(direction);                                                      ////////////////////
-}
-
-
-bool Mesh::hitTest(const Ray& ray, float& t) const {
+bool Mesh::hitTest(const Ray& ray, float& t, Vec3f& N) const {
     bool result = false;
 
     for (const auto& triangle : triangles_) {
-        if (triangle.hitTest(ray, t)) {
+        if (triangle.hitTest(ray, t, N)) {
             result = true;
         }
     }
@@ -149,13 +140,7 @@ Sphere::Sphere(const Vec3f& center, float radius)
 {}
 
 
-Vec3f Sphere::getNormal(const Vec3f& intersectionPoint, const Vec3f& direction) const {
-    Vec3f N = (intersectionPoint - center_).normalize();
-    return N * direction < 0 ? -N : N;
-}
-
-
-bool Sphere::hitTest(const Ray& ray, float& t) const {
+bool Sphere::hitTest(const Ray& ray, float& t, Vec3f& N) const {
     const Vec3f oc = ray.origin - center_;
     const float a = ray.direction * ray.direction;
     const float b = 2 * (oc * ray.direction);
@@ -168,6 +153,9 @@ bool Sphere::hitTest(const Ray& ray, float& t) const {
     const float t0 = (-b - disc) / (2 * a);
     const float t1 = (-b + disc) / (2 * a);
     t = (t0 < t1) ? t0 : t1;
+
+    Vec3f intersectionPoint = ray.origin + ray.direction * t;
+    N = (intersectionPoint - center_).normalize();
 
     return true;
 }
