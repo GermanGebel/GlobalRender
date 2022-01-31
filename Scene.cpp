@@ -173,7 +173,23 @@ void Scene::readLights(const std::string& fileName) {
 
   color.setColors(std::move(colors));
 
-  Light * light = new PointLight(color, intensityTable, origin, normal);
+    //геометрия для протяженного источника света
+    std::vector<Vec3f> verts{
+            Vec3f{343.0,-227.0,548.8},
+            Vec3f{343.0,-332.0,548.8},
+            Vec3f{213.0,-332.0,548.8},
+            Vec3f{213.0,-227.0,548.8}
+    };
+
+    Mesh * lightMesh = new Mesh();
+    lightMesh->ownPoints_ = verts;
+    lightMesh->triangles_.emplace_back(lightMesh, 0, 1, 2);
+    lightMesh->triangles_.emplace_back(lightMesh, 2, 3, 0);
+    lightMesh->materialId_ = 5;
+    geometry_.push_back(lightMesh);
+
+  RectangleLight * light = new RectangleLight{color, intensityTable, origin, normal,  *lightMesh };
+  geometry_.back()->sourceLight_ = light;
   lights_.emplace_back(light);
   in.close();
 }

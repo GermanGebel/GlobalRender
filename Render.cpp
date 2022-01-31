@@ -1,5 +1,6 @@
 #include "Render.h"
 
+#include <iostream>
 #include <chrono>
 #include <fstream>
 #include <random>
@@ -31,17 +32,17 @@ void Render::renderZBuffer(const std::string &outputFileName) {
 
   totalFlux = fluxes.back() + scene->lights_.back()->getFlux();
 
-  for (int phase = 0; phase < PHASES; ++phase) {
+  for (int phase = 0; phase < 1; ++phase) {
     std::cout << "Phase #" << phase << std::endl;
 
-#pragma omp parallel for shared(height, width, outLuminance, rays) default(none)
+//#pragma omp parallel for shared(height, width, outLuminance, rays) default(none)
     for (int i = 0; i < height; ++i) {
       for (int j = 0; j < width; ++j) {
         Ray ray = rays[i][j];  // TODO проверить индексы
 
         int depth;
         Color currentPhaseLuminance;
-        for (depth = 1; depth <= MAX_RENDER_DEPTH; ++depth) {
+        for (depth = 1; depth <= 1; ++depth) {
           float t = std::numeric_limits<float>().max();
           Vec3f N;
           // передаем предыдущую hittedGeometry, чтобы исключить повторные пересечения с ней
@@ -55,8 +56,8 @@ void Render::renderZBuffer(const std::string &outputFileName) {
             // Попали после отражения или преломления
             // TODO первый луч
             if (ray.trash.lastEvent == TransformRayEvent::e_KS || ray.trash.lastEvent == TransformRayEvent::e_KTS) {
-              currentPhaseLuminance = currentPhaseLuminance +
-                                   ((RectangleLight*) hittedGeometry->sourceLight_)->calculateLuminance(ray.direction);
+              currentPhaseLuminance = currentPhaseLuminance + ((RectangleLight*) hittedGeometry->sourceLight_)->calculateLuminance(ray.direction);
+
             }
           }
 
@@ -72,7 +73,6 @@ void Render::renderZBuffer(const std::string &outputFileName) {
           Ray lightRayFake(lightRay.origin + lightRay.direction * EPS, lightRay.direction);
           Vec3f dummy;
           Geometry* shadowGeometry = getIntersection(lightRayFake, t, dummy);
-
 
           Color illuminance = shadowGeometry == nullptr ? light->calculateIlluminance(intersectionPoint, N, lightPoint) : Color();
           illuminance = illuminance * totalFlux / light->getFlux();

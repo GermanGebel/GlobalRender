@@ -225,20 +225,15 @@ Color RectangleLight::calculateLuminance(const Vec3f &rayDir) {
     // Луч гулял по сцене и попал на источник света. Надо узнать испускаемую яркость в данном направлении
     normal = Vec3f(-normal.x, -normal.y, -normal.z);
     float angle = acos((rayDir * normal) / (rayDir.length() * normal.length())) * 180 / M_PI;              ///?????
-    if (angle > 90) {                     //Если источник света развернут
-        Color col = color_;
-        col.setColors(std::vector<float>(color_.getColors().size(), 0));
-        return col;
+    if (angle > 90) {                                           //Если источник света развернут
+        return color_ * 0;
     }
     float step = 90.0 / (luminanceTable_.size() - 1);             //step = 22.5, angle = 50
 
     int leftPosLumTable = angle / step;
-    float luminance = luminanceTable_[leftPosLumTable] +
-                      ((luminanceTable_[leftPosLumTable + 1] -
-                        luminanceTable_[leftPosLumTable]) / step) *
+    float luminance = luminanceTable_[leftPosLumTable] + ((luminanceTable_[leftPosLumTable + 1] - luminanceTable_[leftPosLumTable]) / step) *
                       (angle - leftPosLumTable * step);
     return color_ * luminance;
-
 }
 
 Ray RectangleLight::fireRay() {
@@ -254,14 +249,12 @@ Color RectangleLight::calculateIlluminance(const Vec3f& surfPoint, const Vec3f& 
     // Расчер освещенност (есть точка источнка, и как он освещает какую-то точку в пространсве
     // E = I/(r*r) * cos(alpha)
 
-    Vec3f direRay = surfPoint - lightPoint;
+    Vec3f direRay = lightPoint - surfPoint;
     float distanse = direRay.length();
     float angle = acos((direRay * surfNormal) / distanse) * 180 / M_PI;
 
     if (angle > 90) {                     //Если источник света развернут
-        Color col = color_;
-        col.setColors(std::vector<float>(color_.getColors().size(), 0));
-        return col;
+        return color_ * 0;
     }
     float step = 90.0 / (intensityTable_.size() - 1);
 
