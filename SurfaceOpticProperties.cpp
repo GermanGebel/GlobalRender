@@ -8,7 +8,7 @@ Kd::Kd(const Color& color, float coeff)
 {}
 
 Color Kd::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
-  return (E * color) * coeff *(1/M_PI);
+  return (E * color) * coeff * (1/M_PI);
 }
 
 
@@ -163,9 +163,28 @@ Ray Kts::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionP
   }
 
   float eta = n1 / n2;
-  float k = 1 - eta * eta * (1 - cosinus * cosinus);
+
+  float maxRefractionAngle = std::asin(1 / eta); // максимальный угол преломления
 
   Ray transformedRay;
+
+  if (maxRefractionAngle < std::acos(cosinus)) {
+        Vec3f direction = ray.direction;
+        Vec3f specularDirection = direction - N * 2 * (direction * N);
+        specularDirection = specularDirection.normalize();
+
+        Ray transformedRay;
+
+        transformedRay.direction = specularDirection;
+        transformedRay.origin = intersectionPoint;
+        transformedRay.color = color * ray.color * coeff;
+        transformedRay.trash.lastEvent = TransformRayEvent::e_KS;
+        transformedRay.color = transformedRay.color * ray.color.sum() / transformedRay.color.sum();
+
+        return transformedRay;
+  }
+
+  float k = 1 - eta * eta * (1 - cosinus * cosinus);
 
   if (k < 0) {
     transformedRay.direction = Vec3f(1, 0, 0);
@@ -173,10 +192,13 @@ Ray Kts::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionP
     transformedRay.direction = I * eta + N * (eta * cosinus - sqrtf(k));
   }
 
+
   transformedRay.envProp = n2;
   transformedRay.origin = intersectionPoint;
   transformedRay.color = color * ray.color * coeff;
   transformedRay.color = transformedRay.color * ray.color.sum() / transformedRay.color.sum();
+  transformedRay.trash.lastEvent = TransformRayEvent::e_KTS;
+
 
   return transformedRay;
 
