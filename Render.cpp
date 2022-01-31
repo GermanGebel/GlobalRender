@@ -42,7 +42,7 @@ void Render::renderZBuffer(const std::string &outputFileName) {
 
         int depth;
         Color currentPhaseLuminance;
-        for (depth = 1; depth <= 1; ++depth) {
+        for (depth = 1; depth <= 10; ++depth) {
           float t = std::numeric_limits<float>().max();
           Vec3f N;
           // передаем предыдущую hittedGeometry, чтобы исключить повторные пересечения с ней
@@ -55,9 +55,8 @@ void Render::renderZBuffer(const std::string &outputFileName) {
           if (hittedGeometry->sourceLight_) { // Попали в источник света
             // Попали после отражения или преломления
             // TODO первый луч
-            if (ray.trash.lastEvent == TransformRayEvent::e_KS || ray.trash.lastEvent == TransformRayEvent::e_KTS) {
+            if (ray.trash.lastEvent == TransformRayEvent::e_START || ray.trash.lastEvent == TransformRayEvent::e_KS || ray.trash.lastEvent == TransformRayEvent::e_KTS) {
               currentPhaseLuminance = currentPhaseLuminance + ((RectangleLight*) hittedGeometry->sourceLight_)->calculateLuminance(ray.direction);
-
             }
           }
 

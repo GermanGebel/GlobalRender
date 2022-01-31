@@ -11,11 +11,12 @@ enum TransformRayEvent {
   e_KTD,
   e_KTS,
   e_BRDF,
-  e_KILL
+  e_KILL,
+  e_START
 };
 
 struct Container {
-  TransformRayEvent lastEvent;
+  TransformRayEvent lastEvent = e_START;
 };
 
 struct Ray {
