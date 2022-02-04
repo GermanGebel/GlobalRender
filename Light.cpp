@@ -50,6 +50,14 @@ Light::Light(const Color &ks, std::vector<float> intensityTable, Vec3f normal, f
     // intensityTable_ расчирина до ≈ 90 значений
     // интеграл траблицы ≈ потоку (flux)
 
+    std::vector<float> temppCol = color_.getColors();
+    int sum = std::accumulate(temppCol.begin(), temppCol.end(), 0);
+
+    for(int i = 0; i < temppCol.size(); i++){
+        temppCol[i] = temppCol[i] / sum;
+    }
+    color_.setColors(temppCol);
+
     tabularProbabilities_ = calculateIntegral();
     float calculated_flux = tabularProbabilities_.back() * 2 * M_PI;
     if (flux_ == -1) {

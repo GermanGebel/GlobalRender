@@ -32,17 +32,17 @@ void Render::renderZBuffer(const std::string &outputFileName) {
 
   totalFlux = fluxes.back() + scene->lights_.back()->getFlux();
 
-  for (int phase = 0; phase < 1; ++phase) {
+  for (int phase = 0; phase < 15; ++phase) {
     std::cout << "Phase #" << phase << std::endl;
 
-//#pragma omp parallel for shared(height, width, outLuminance, rays) default(none)
+#pragma omp parallel for shared(height, width, outLuminance, rays) default(none)
     for (int i = 0; i < height; ++i) {
       for (int j = 0; j < width; ++j) {
         Ray ray = rays[i][j];  // TODO проверить индексы
 
         int depth;
         Color currentPhaseLuminance;
-        for (depth = 1; depth <= 10; ++depth) {
+        for (depth = 1; depth <= MAX_RENDER_DEPTH; ++depth) {
           float t = std::numeric_limits<float>().max();
           Vec3f N;
           // передаем предыдущую hittedGeometry, чтобы исключить повторные пересечения с ней
@@ -54,7 +54,6 @@ void Render::renderZBuffer(const std::string &outputFileName) {
 
           if (hittedGeometry->sourceLight_) { // Попали в источник света
             // Попали после отражения или преломления
-            // TODO первый луч
             if (ray.trash.lastEvent == TransformRayEvent::e_START || ray.trash.lastEvent == TransformRayEvent::e_KS || ray.trash.lastEvent == TransformRayEvent::e_KTS) {
               currentPhaseLuminance = currentPhaseLuminance + ((RectangleLight*) hittedGeometry->sourceLight_)->calculateLuminance(ray.direction);
             }
@@ -94,7 +93,7 @@ void Render::renderZBuffer(const std::string &outputFileName) {
           }
         }
 
-        outLuminance[i][j] = outLuminance[i][j] + currentPhaseLuminance / depth;
+        outLuminance[i][j] = outLuminance[i][j] + currentPhaseLuminance;
       }
     }
   }

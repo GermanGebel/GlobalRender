@@ -175,10 +175,10 @@ void Scene::readLights(const std::string& fileName) {
 
     //геометрия для протяженного источника света
     std::vector<Vec3f> verts{
-            Vec3f{343.0,-227.0,548.8},
-            Vec3f{343.0,-332.0,548.8},
-            Vec3f{213.0,-332.0,548.8},
-            Vec3f{213.0,-227.0,548.8}
+            Vec3f{343.0,-227.0,548},
+            Vec3f{343.0,-332.0,548},
+            Vec3f{213.0,-332.0,548},
+            Vec3f{213.0,-227.0,548}
     };
 
     Mesh * lightMesh = new Mesh();
