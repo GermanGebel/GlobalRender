@@ -13,8 +13,11 @@ BRDF::BRDF(const Color& color, float kr, float e)
 
 Color BRDF::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, const Vec3f& N) const {
   // FIXME угол между зеркально отраженным лучом наблюдения и направлением освещения
-  float cosTheta = -U * N; // косинус угла между нормалью и направлением наблюдения
-  return (color * E) * c * kr * powf(cosTheta, e)*(1/M_PI); // (25.2) Ray Tracing from Ground Up
+  Vec3f reflectedU = U - N * 2 * (U * N);
+  reflectedU = reflectedU.normalize();
+  float cosTheta = reflectedU * V;
+  if (cosTheta < 0) cosTheta = 0;
+  return (color * E) * c * kr * powf(cosTheta, e); // (25.2) Ray Tracing from Ground Up
 }
 
 Ray BRDF::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionPoint) const {
