@@ -17,7 +17,7 @@ Color BRDF::CalculateLuminance(const Color& E, const Vec3f& U, const Vec3f& V, c
   reflectedU = reflectedU.normalize();
   float cosTheta = reflectedU * V;
   if (cosTheta < 0) cosTheta = 0;
-  return (color * E) * c * kr * powf(cosTheta, e); // (25.2) Ray Tracing from Ground Up
+  return (color * E) * kr * powf(cosTheta, e) / M_PI; // (25.2) Ray Tracing from Ground Up
 }
 
 Ray BRDF::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersectionPoint) const {
@@ -53,7 +53,8 @@ Ray BRDF::TransformRay(const Ray& ray, const Vec3f& N, const Vec3f& intersection
   transformedRay.origin = intersectionPoint;
   transformedRay.trash.lastEvent = TransformRayEvent::e_BRDF;
   transformedRay.color = ray.color * color;
-  transformedRay.color = transformedRay.color * ray.color.sum() / transformedRay.color.sum();
+  if (transformedRay.color.sum() > 0)
+    transformedRay.color = transformedRay.color * ray.color.sum() / transformedRay.color.sum();
 
   if (direction * N < 0)
     transformedRay.trash.lastEvent = TransformRayEvent::e_KILL;
