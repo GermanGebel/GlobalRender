@@ -1,21 +1,4 @@
-## Okay let's go
-<img src="LeGo.jpg"/>
-
-
-
-1. Сколько длин волн? Минимум.
-2. Матрицы с openCV (но ребятам надо подключить)
-3. Кто рассчитывает отажения у луча
-
-
-
-Header
-1. Геометрия (почему у геометрии нет функции запустить луч?)
-2. Луч
-3. Камера
-4. Источник света
-5. Оптические свойства (как задавать брдф)
-6.  Сцена
-7. Математика (нужны ли будут только умножения?) Вообще нужен ли он
-
-
+## Creating a Photorealistic Render Engine in C++ Using Monte Carlo and Path Tracing
+<img src="cornellBox.jpg"/>
+This is an educational project for ITMO University students. Master's degree.
+Creators: Alexander Anikeev, Julia Golovchanskaya, German Gabel, Igor Kinev, Anton Kuznetsov, Stas Kupriyanov, German Goebel and Ruslan Khalimov
